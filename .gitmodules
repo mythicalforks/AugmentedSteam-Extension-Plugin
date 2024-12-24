@@ -1,0 +1,4 @@
+[submodule "AugmentedSteam"]
+	path = AugmentedSteam
+	url = https://github.com/IsThereAnyDeal/AugmentedSteam
+	branch = master
