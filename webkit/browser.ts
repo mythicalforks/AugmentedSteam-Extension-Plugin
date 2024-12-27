@@ -1,16 +1,16 @@
 import { callable } from "@steambrew/webkit";
-import { getCdn, getLoopbackCdn, Logger, MANIFEST, VERSION } from "./shared";
+import { getCdn, getLoopbackCdn, Logger, VERSION } from "./shared";
 
-// In this file we emulate the extension browser api for the steamdb extension
+// In this file we emulate the extension browser api for the Augmented Steam extension
 
-window.chrome = {};
-const augmentedBrowser = window.chrome;
+window.augmentedBrowser = {};
+const augmentedBrowser = window.augmentedBrowser;
 
 // #region Defaults
 
 // augmentedBrowser.storage.sync.onChanged = {};
 augmentedBrowser.runtime = {};
-augmentedBrowser.runtime.getManifest = () => MANIFEST;
+augmentedBrowser.runtime.getManifest = () => {return {version: VERSION}};
 augmentedBrowser.runtime.id = 'kdbmhfkmnlmbkgbabkdealhhbfhlmmon'; // Chrome
 
 export const SYNC_STORAGE_KEY = 'augmented-options-sync';
@@ -34,7 +34,7 @@ augmentedBrowser.contextMenus.onClicked.hasListener = () => {};
 augmentedBrowser.storage = {};
 augmentedBrowser.storage.sync = {};
 
-async function StorageGet(storageKey: string, items?: string[] | {[key: string]: any}, callback?: Function): Promise<any> {
+async function StorageGet(storageKey: string, items?: string | string[] | {[key: string]: any}, callback?: Function): Promise<any> {
     let storedData = localStorage.getItem(storageKey);
     let result: { [key: string]: any } = {};
     let parsedData: { [key: string]: any } = {};
@@ -42,7 +42,11 @@ async function StorageGet(storageKey: string, items?: string[] | {[key: string]:
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
     } catch (e) {
-        Logger.Error('failed to parse JSON for steamdb-options');
+        Logger.Error(`failed to parse JSON for ${storageKey}`);
+    }
+
+    if (typeof items === 'string') {
+        items = [items];
     }
 
     if (Array.isArray(items)) {
@@ -74,7 +78,7 @@ async function StorageSet(storageKey: string, item: { [key: string]: any }, call
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
     } catch (e) {
-        Logger.Error('failed to parse JSON for steamdb-options');
+        Logger.Error(`failed to parse JSON for ${storageKey}`);
     }
 
     // let key = Object.keys(item)[0];
@@ -102,7 +106,7 @@ async function StorageRemove(storageKey: string, key: string | string[], callbac
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
     } catch (e) {    
-        Logger.Error('failed to parse JSON for steamdb-options');
+        Logger.Error(`failed to parse JSON for ${storageKey}`);
     }
 
     if (!Array.isArray(key)) {
@@ -128,12 +132,14 @@ augmentedBrowser.storage.local.get = (items?: any, callback?: Function) => Stora
 augmentedBrowser.storage.local.set = (item: any, callback?: Function) => StorageSet(LOCAL_STORAGE_KEY, item, callback);
 augmentedBrowser.storage.local.remove = (key: any, callback?: Function) => StorageRemove(LOCAL_STORAGE_KEY, key, callback);
 
-//TODO: hook into fetch to send some requests to backend
+//#region fake fetch
 const oldFetch = window.fetch;
 
 const interceptedUrls: RegExp[] = [
-    /https:\/\/steamcommunity\.com\/id/,
-    /https:\/\/steamcommunity\.com\/profiles\/\d+\/ajaxgetbadgeinfo/,
+    /steamcommunity\.com\/id/,
+    /steamcommunity\.com\/profiles\/\d+\/$/,
+    /steamcommunity\.com\/profiles\/\d+\/ajaxgetbadgeinfo/,
+    /steamcommunity\.com\/inventory\//,
 ];
 
 const backendFetch = callable<[{url: string}], string>('BackendFetch');
@@ -147,11 +153,13 @@ type BackendResponse = {
 };
 
 window.fetch = async (url: string | URL | Request, params?: RequestInit): Promise<Response> => {
-    console.log(url, params);
-
     for (const intercept of interceptedUrls) {
         if (url.toString().match(intercept)) {
-            Logger.Log(`intercepting ${url}`);
+            Logger.Debug(`intercepting ${url}`);
+            if (params) {
+                //TODO: Handle credentials params
+                Logger.Warn('fetch params not supported', params);
+            }
             const response = JSON.parse(await backendFetch({url: url.toString()})) as BackendResponse;
             
             return new Response(response.body, {status: response.status, headers: response.headers});
@@ -160,6 +168,7 @@ window.fetch = async (url: string | URL | Request, params?: RequestInit): Promis
 
     return oldFetch(url, params);
 }
+// #endregion
 
 // augmentedBrowser.storage.sync.set = async function (item: { [key: string]: any }) {
 //     let storedData = localStorage.getItem(STORAGE_KEY);
@@ -301,39 +310,41 @@ window.fetch = async (url: string | URL | Request, params?: RequestInit): Promis
 // }
 // // #endregion
 
-// //#region getResourceUrl
+//#region getResourceUrl
 augmentedBrowser.runtime.getURL = function (res: string) {
     if (res.endsWith('.png')) {
         return getLoopbackCdn(res);
     }
     return getCdn(res);
 }
-// //#endregion
+//#endregion
+
+// #region Background messaging
+window.clients = {matchAll: () => [{url: 'html/offscreen_domparser.html'}]}
+window.chrome.offscreen = {};
+window.chrome.offscreen.closeDocument = () => {};
+
 type MessageCallback = (message: any, sender: any, sendResponse: (response: any) => void) => any;
 
-let messageListener: MessageCallback|null = null;
+let messageListeners: MessageCallback[] = [];
 
 augmentedBrowser.runtime.onMessage = {};
 augmentedBrowser.runtime.onMessage.addListener = (callback: MessageCallback) => {
-    if (messageListener !== null) {
-        Logger.Error('Only one message listener is allowed');
-        return;
-    }
-
-    messageListener = callback;
+    messageListeners.push(callback);
 };
 
 augmentedBrowser.runtime.sendMessage = function (message: any, callback?: (response: any) => void): void {
-    // const method = callable<[any]>(message.contentScriptQuery);
-    // let response = await method(message) as string;
-    // return JSON.parse(response);
-    Logger.Log('Sending message', message);
-    messageListener(message, {tab: {}}, (response: any) => {
-        if (callback) {
-            callback(response);
-        }
-    });    
+    Logger.Debug('Sending message', message);
+    messageListeners.forEach((listener) => {
+        listener(message, {tab: {}}, (response: any) => {
+            if (callback) {
+                callback(response);
+            }
+        });
+    });
 }
+
+//#endregion
 
 // //#region add external to newly created a tags
 // let oldCreateElement = document.createElement.bind(document);

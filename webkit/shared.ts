@@ -1,9 +1,8 @@
-import { callable, Millennium } from "@steambrew/webkit";
+import { callable } from "@steambrew/webkit";
 
-export const VERSION = "4.10";
+export const VERSION = "4.2.1";
 export let CDN: string;
 export let LOOPBACK_CDN: string = 'https://steamloopback.host/AugmentedSteam';
-export let MANIFEST: object;
 export const DEV = true;
 
 export function getCdn(path: string) {
@@ -22,31 +21,40 @@ export function getLoopbackCdn(path: string) {
     return `${LOOPBACK_CDN}/${path}`;
 }
 
-export async function initCdn() {
-    const getPluginDir = callable('GetPluginDir') as () => Promise<string>;
-    const envString = DEV ? 'dev' : 'prod';
-    const extensionFolder = (await getPluginDir()).replace(/.*\\([^\\]+)\\([^\\]+)$/, '/$1/$2') + `/AugmentedSteam/dist/${envString}.chrome`;
-    CDN = 'https://s.ytimg.com/millennium-virtual' + extensionFolder;
-}
+const PLUGIN_DIR_STORAGE = 'augmented_plugin_dir';
+const getPluginDir = callable<[], string>('GetPluginDir');
 
-export async function initManifest() {
-    MANIFEST = JSON.parse(await fetch(getCdn('manifest.json')).then(r => r.text()));
+export async function initCdn() {
+    let pluginDir = sessionStorage.getItem(PLUGIN_DIR_STORAGE);
+    if (pluginDir === null) {
+        pluginDir = await getPluginDir();
+        sessionStorage.setItem(PLUGIN_DIR_STORAGE, pluginDir);
+    }
+    const envString = DEV ? 'dev' : 'prod';
+    const extensionFolder = pluginDir.replace(/.*\\([^\\]+)\\([^\\]+)$/, '/$1/$2') + `/AugmentedSteam/dist/${envString}.chrome`;
+    CDN = 'https://s.ytimg.com/millennium-virtual' + extensionFolder;
 }
 
 declare global{
     interface Window {
+        augmentedBrowser: any;
+        /** @deprecated Use `augmentedBrowser` instead when possible. */
         chrome: any;
+        clients: {matchAll: () => any[]};
     }
 }
 
 export const Logger = {
-    Error: (...message: string[]) => {
+    Error: (...message: any[]) => {
         console.error('%c AugmentedSteam plugin ', 'background: red; color: white', ...message);
     },
-    Log: (...message: string[]) => {
+    Log: (...message: any[]) => {
         console.log('%c AugmentedSteam plugin ', 'background: purple; color: white', ...message);
     },
-    Warn: (...message: string[]) => {
+    Debug: (...message: any[]) => {
+        console.debug('%c AugmentedSteam plugin ', 'background: black; color: white', ...message);
+    },
+    Warn: (...message: any[]) => {
         console.warn('%c AugmentedSteam plugin ', 'background: orange; color: white', ...message);
     }
 };

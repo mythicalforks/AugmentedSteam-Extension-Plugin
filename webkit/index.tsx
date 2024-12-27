@@ -1,71 +1,100 @@
 import './browser';
 // import { getLang } from './browser';
 import { getNeededScripts } from './script-loading';
-import { getCdn, initCdn, initManifest, Logger, LOOPBACK_CDN } from "./shared";
+import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN } from "./shared";
 import { createFakeHeader } from './header';
+import { Millennium } from '@steambrew/webkit';
 
 async function loadScript(src: string) {
+    let content = await fetch(src).then(response => response.text());
+    content += '\n//# sourceURL=' + src;
+    content = content.replace('wrapAPIs(chrome)', 'wrapAPIs(window.augmentedBrowser)')
+                     .replace('globalThis.chrome', 'globalThis.augmentedBrowser')
+                     .replace('chrome.', 'augmentedBrowser.');
+
     return new Promise<void>((resolve, reject) => {
-        var script = document.createElement('script');
-        script.setAttribute('type', 'text/javascript');
-        script.setAttribute('src', src);
+        const script = document.createElement('script');
+        // script.src = src;
+        script.type = 'text/javascript';
+        script.async = true;
+        script.innerHTML = content;
+        script.setAttribute('original-src', src);
 
-        script.addEventListener('load', () => {
-            resolve();
-        });
+        script.onload = () => resolve();
 
-        script.addEventListener('error', () => {
-            reject(new Error('Failed to load script'));
-        });
+        script.onerror = () => reject(new Error('Failed to load script'));
 
         document.head.appendChild(script);
+        resolve();
     });
 }
 
-function loadScriptWithContent(scriptString: string) {
-    var script = document.createElement('script');
-    script.setAttribute('type', 'text/javascript');
-    script.innerHTML = scriptString;
+// function loadScriptWithContent(scriptString: string) {
+//     var script = document.createElement('script');
+//     script.setAttribute('type', 'text/javascript');
+//     script.innerHTML = scriptString;
 
-    document.head.appendChild(script);
-}
+//     document.head.appendChild(script);
+// }
 
 async function loadStyle(src: string) {
     let content = await fetch(src).then(response => response.text());
-    // url(https://s.ytimg.com/millennium-virtual/plugins/AugmentedSteam-plugin/AugmentedSteam/dist/dev.chrome/img/steamdb_store.png)
     content = content.replaceAll('chrome-extension://__MSG_@@extension_id__', LOOPBACK_CDN);
 
     return new Promise<void>((resolve, reject) => {
         var style = document.createElement('style');
-        style.setAttribute('type', 'text/css');
         style.setAttribute('original-src', src);
         style.innerHTML = content;
 
-        style.addEventListener('load', () => {
-            resolve();
-        }); 
+        style.onload = () => resolve();
 
-        style.addEventListener('error', () => {
-            reject(new Error('Failed to load style'));
-        });
+        style.onerror = () => reject(new Error('Failed to load style'));
 
         document.head.appendChild(style);
     });
 }
 
-async function loadPageSpecificScripts() {
-    let scripts = getNeededScripts();
-
+async function loadJsScripts(scripts: string[]) {
+    const promises = [];
     for (const script of scripts.filter(script => script.includes(".js"))) {
-        loadScript(getCdn(script));
+        promises.push(loadScript(getCdn(script)));
     }
 
+    return Promise.all(promises);
+}
+
+function loadCssScripts(scripts: string[]) {
+    const promises = [];
     for (const style of scripts.filter(script => script.includes(".css"))) {
-        loadStyle(getCdn(style));
+        promises.push(loadStyle(getCdn(style)));
+    }
+
+    return Promise.all(promises);
+}
+
+const startTime = performance.now();
+
+async function testPerformance() {
+    await Millennium.findElement(document, '.es_highlighted_owned');
+
+    Logger.Log(`Took Augmented Steam ${performance.now() - startTime}ms to load`);
+
+    if (DEV) {
+        //@ts-ignore
+        window.reset = reset;
+
+        const prevTime = localStorage.getItem('time') ?? 0;
+        localStorage.setItem('time', (performance.now() - startTime + Number(prevTime)).toString());
+        const prevCounter = localStorage.getItem('counter') ?? 0;
+        localStorage.setItem('counter', (Number(prevCounter) + 1).toString());
+        Logger.Log(`Avg: ${Number(localStorage.getItem('time'))/Number(localStorage.getItem('counter'))}`);
     }
 }
 
-
+function reset() {
+    localStorage.removeItem('time');
+    localStorage.removeItem('counter');
+}
 
 export default async function WebkitMain () {
     const href = window.location.href;
@@ -73,6 +102,8 @@ export default async function WebkitMain () {
     if (!href.includes("https://store.steampowered.com") && !href.includes("https://steamcommunity.com")) {
         return;
     }
+
+    testPerformance()
 
     // Log all await calls
     // const originalThen = Promise.prototype.then;
@@ -82,18 +113,20 @@ export default async function WebkitMain () {
     //     console.log("Await called:", stack);
     //     return originalThen.call(this, onFulfilled, onRejected);
     // };
-
-    createFakeHeader();
     
     Logger.Log("plugin is running");
+
+    await createFakeHeader();
+
     await initCdn();
-    await initManifest();
 
-    const fakeHeader = document.createElement('div');
-    fakeHeader.id = 'global_header';
-    document.body.appendChild(fakeHeader);
+    const scripts = getNeededScripts();
 
-    await loadScript(getCdn('js/background.js'));
+    await Promise.all([
+        loadCssScripts(scripts),
+        loadScript(getCdn('js/background.js')),
+        loadScript(getCdn('js/offscreen_domparser.js')),    
+    ]);
 
-    loadPageSpecificScripts();
+    await loadJsScripts(scripts);
 }

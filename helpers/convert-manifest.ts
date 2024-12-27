@@ -13,7 +13,7 @@ interface ManifestData {
 }
 
 function urlToRegex(url: string): string {
-    return `^${escapeStringRegexp(url).replace(/\\\*/g, '.*')}$`;
+    return `^${escapeStringRegexp(url).replace(/\\\*/g, '.*').replace(/\//g, '\\/')}$`;
 }
 
 function convertToJs(): void {
@@ -33,7 +33,7 @@ function convertToJs(): void {
             const jsFiles = script.js || [];
             const cssFiles = script.css || [];
 
-            let combinedMatchesStr = matches.map(m => `href.match("${urlToRegex(m)}")`).join(' || ');
+            let combinedMatchesStr = matches.map(m => `href.match(/${urlToRegex(m)}/)`).join(' || ');
             combinedMatchesStr = `(${combinedMatchesStr})`;
             // Add the exclude_matches to the combinedMatchesStr
             if (script.exclude_matches) {

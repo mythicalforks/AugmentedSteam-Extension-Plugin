@@ -7,7 +7,6 @@ import os
 import shutil
 import requests
 
-WEBKIT_CSS_FILE = "steamdb-webkit.css"
 CSS_ID = None
 DEBUG = True
 
@@ -26,6 +25,14 @@ def BackendFetch(url: str) -> str:
     }
     
     return json.dumps(result)
+
+STEAM_ID = None
+
+def GetSteamId():
+    global STEAM_ID
+    if STEAM_ID is None:
+        STEAM_ID = Millennium.call_frontend_method('getSteamId')
+    return STEAM_ID
 
 class Plugin:
     def copy_frontend_files(self):

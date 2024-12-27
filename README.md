@@ -7,6 +7,4 @@ This plugin ports the functionality of the [Augmented Steam Browser Extension](h
 
 ## TODO
 - [ ] README
-- [ ] Video player seems to be paused (because of something in fake header)
-- [ ] One feature is not loading in
-- [ ] Convert manifest
+- [ ] React fake header doesn't always load in
