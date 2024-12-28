@@ -102,7 +102,9 @@ export default async function WebkitMain () {
     if (href.includes('isthereanydeal.com')) {
         await Millennium.findElement(document, '.error-message');
         // Page errored, do a force reload
-        window.location.reload();
+        setTimeout(() => {
+            window.location.reload();
+        }, 500)
     }
 
     if (!href.includes("https://store.steampowered.com") && !href.includes("https://steamcommunity.com")) {
