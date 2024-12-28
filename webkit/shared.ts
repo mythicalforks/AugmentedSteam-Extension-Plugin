@@ -1,6 +1,6 @@
-import { callable } from "@steambrew/webkit";
+import { callable } from '@steambrew/webkit';
 
-export const VERSION = "4.2.1";
+export const VERSION = '4.2.1';
 export let CDN: string;
 export let LOOPBACK_CDN: string = 'https://steamloopback.host/AugmentedSteam';
 export const DEV = true;
@@ -35,12 +35,12 @@ export async function initCdn() {
     CDN = 'https://s.ytimg.com/millennium-virtual' + extensionFolder;
 }
 
-declare global{
+declare global {
     interface Window {
         augmentedBrowser: any;
         /** @deprecated Use `augmentedBrowser` instead when possible. */
         chrome: any;
-        clients: {matchAll: () => any[]};
+        clients: { matchAll: () => any[] };
     }
 }
 
@@ -56,5 +56,5 @@ export const Logger = {
     },
     Warn: (...message: any[]) => {
         console.warn('%c AugmentedSteam plugin ', 'background: orange; color: white', ...message);
-    }
+    },
 };

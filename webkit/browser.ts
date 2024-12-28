@@ -1,20 +1,16 @@
-import { callable } from "@steambrew/webkit";
-import { getCdn, getLoopbackCdn, Logger, VERSION } from "./shared";
+import { callable } from '@steambrew/webkit';
+import { getCdn, getLoopbackCdn, Logger, VERSION } from './shared';
 
 // In this file we emulate the extension browser api for the Augmented Steam extension
 
 window.augmentedBrowser = {};
 const augmentedBrowser = window.augmentedBrowser;
 
-// #region Defaults
+//#region Defaults
 
-// augmentedBrowser.storage.sync.onChanged = {};
 augmentedBrowser.runtime = {};
-augmentedBrowser.runtime.getManifest = () => {return {version: VERSION}};
+augmentedBrowser.runtime.getManifest = () => { return {version: VERSION}; };
 augmentedBrowser.runtime.id = 'kdbmhfkmnlmbkgbabkdealhhbfhlmmon'; // Chrome
-
-export const SYNC_STORAGE_KEY = 'augmented-options-sync';
-const LOCAL_STORAGE_KEY = 'augmented-options-local';
 
 augmentedBrowser.runtime.onInstalled = {};
 augmentedBrowser.runtime.onInstalled.addListener = () => {};
@@ -29,20 +25,23 @@ augmentedBrowser.contextMenus.onClicked.hasListener = () => {};
 
 //#endregion
 
-// #region Storage
+//#region Storage
+
+const SYNC_STORAGE_KEY = 'augmented-options-sync';
+const LOCAL_STORAGE_KEY = 'augmented-options-local';
 
 augmentedBrowser.storage = {};
 augmentedBrowser.storage.sync = {};
 
-async function StorageGet(storageKey: string, items?: string | string[] | {[key: string]: any}, callback?: Function): Promise<any> {
-    let storedData = localStorage.getItem(storageKey);
-    let result: { [key: string]: any } = {};
-    let parsedData: { [key: string]: any } = {};
+async function StorageGet(storageKey: string, items?: string | string[] | Record<string, any>, callback?: Function): Promise<any> {
+    const storedData = localStorage.getItem(storageKey);
+    const result: Record<string, any> = {};
+    let parsedData: Record<string, any> = {};
 
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
     } catch (e) {
-        Logger.Error(`failed to parse JSON for ${storageKey}`);
+        throw new Error(`failed to parse JSON for ${storageKey}`);
     }
 
     if (typeof items === 'string') {
@@ -56,12 +55,9 @@ async function StorageGet(storageKey: string, items?: string | string[] | {[key:
             }
         });
     } else if (typeof items === 'object') {
-            for (let key in items) {
-                let foundItem = key in parsedData ? parsedData[key] : items[key];
-                // if (typeof foundItem === 'boolean') {
-                    result[key] = foundItem
-                // }
-            }
+        for (const key in items) {
+            result[key] = key in parsedData ? parsedData[key] : items[key];
+        }
     }
 
     if (callback) {
@@ -71,25 +67,15 @@ async function StorageGet(storageKey: string, items?: string | string[] | {[key:
     return result;
 }
 
-async function StorageSet(storageKey: string, item: { [key: string]: any }, callback?: Function) {
-    let storedData = localStorage.getItem(storageKey);
-    let parsedData: { [key: string]: any } = {};
+async function StorageSet(storageKey: string, item: Record<string, any>, callback?: Function) {
+    const storedData = localStorage.getItem(storageKey);
+    let parsedData: Record<string, any> = {};
 
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
     } catch (e) {
-        Logger.Error(`failed to parse JSON for ${storageKey}`);
+        throw new Error(`failed to parse JSON for ${storageKey}`);
     }
-
-    // let key = Object.keys(item)[0];
-    // storageListeners.forEach(callback => {
-    //     callback({
-    //         [key]: {
-    //             oldValue: parsedData[key],
-    //             newValue: item[key]
-    //         }
-    //     });
-    // });
 
     Object.assign(parsedData, item);
     localStorage.setItem(storageKey, JSON.stringify(parsedData));
@@ -100,19 +86,19 @@ async function StorageSet(storageKey: string, item: { [key: string]: any }, call
 }
 
 async function StorageRemove(storageKey: string, key: string | string[], callback?: Function) {
-    let storedData = localStorage.getItem(storageKey);
-    let parsedData: { [key: string]: any } = {};
+    const storedData = localStorage.getItem(storageKey);
+    let parsedData: Record<string, any> = {};
 
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
-    } catch (e) {    
-        Logger.Error(`failed to parse JSON for ${storageKey}`);
+    } catch (e) {
+        throw new Error(`failed to parse JSON for ${storageKey}`);
     }
 
     if (!Array.isArray(key)) {
         key = [key];
     }
-    
+
     key.forEach(k => {
         delete parsedData[k];
     });
@@ -132,6 +118,8 @@ augmentedBrowser.storage.local.get = (items?: any, callback?: Function) => Stora
 augmentedBrowser.storage.local.set = (item: any, callback?: Function) => StorageSet(LOCAL_STORAGE_KEY, item, callback);
 augmentedBrowser.storage.local.remove = (key: any, callback?: Function) => StorageRemove(LOCAL_STORAGE_KEY, key, callback);
 
+//#endregion
+
 //#region fake fetch
 const oldFetch = window.fetch;
 
@@ -143,7 +131,7 @@ const interceptedUrls: RegExp[] = [
     /store\.steampowered\.com\/steamaccount\/addfunds/,
 ];
 
-const backendFetch = callable<[{url: string}], string>('BackendFetch');
+const backendFetch = callable<[{ url: string }], string>('BackendFetch');
 
 type BackendResponse = {
     'ok': boolean,
@@ -162,156 +150,16 @@ window.fetch = async (url: string | URL | Request, params?: RequestInit): Promis
                 Logger.Warn('fetch params not supported', params);
             }
             const response = JSON.parse(await backendFetch({url: url.toString()})) as BackendResponse;
-            
-            let responseObject = new Response(response.body, {status: response.status, headers: response.headers});
-            Object.defineProperty(responseObject, "url", { value: response.url });
+
+            const responseObject = new Response(response.body, {status: response.status, headers: response.headers});
+            Object.defineProperty(responseObject, 'url', {value: response.url});
             return responseObject;
         }
     }
 
     return oldFetch(url, params);
-}
-// #endregion
-
-// augmentedBrowser.storage.sync.set = async function (item: { [key: string]: any }) {
-//     let storedData = localStorage.getItem(STORAGE_KEY);
-//     let parsedData: { [key: string]: any } = {};
-
-//     try {
-//         parsedData = storedData ? JSON.parse(storedData) : {};
-//     } catch (e) {
-//         Logger.Error('failed to parse JSON for steamdb-options');
-//     }
-
-//     let key = Object.keys(item)[0];
-//     storageListeners.forEach(callback => {
-//         callback({
-//             [key]: {
-//                 oldValue: parsedData[key],
-//                 newValue: item[key]
-//             }
-//         });
-//     });
-
-//     Object.assign(parsedData, item);
-//     localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
-// }
-
-// augmentedBrowser.storage.sync.onChanged = {};
-// let storageListeners: ((changes: { [key: string]: { oldValue: any; newValue: any; } }) => void)[] = [];
-// augmentedBrowser.storage.sync.onChanged.addListener = function (callback: (changes: { [key: string]: { oldValue: any; newValue: any; } }) => void) {
-//     storageListeners.push(callback);
-// }
+};
 //#endregion
-
-// //#region fake permissions
-// augmentedBrowser.permissions = {};
-// augmentedBrowser.permissions.request = function () {};
-// augmentedBrowser.permissions.onAdded = {};
-// augmentedBrowser.permissions.onAdded.addListener = function () {};
-// augmentedBrowser.permissions.onRemoved = {};
-// augmentedBrowser.permissions.onRemoved.addListener = function () {};
-// augmentedBrowser.permissions.contains = function (_: any, callback: (result: boolean) => void) {
-//     callback(true);
-// };
-// //#endregion
-
-// // #region i18n Translation
-// augmentedBrowser.i18n = {};
-// const langPrefix = "steamDB_";
-// let langKey = "";
-// export async function getLang() {
-//     let language = navigator.language.toLowerCase().split("-")[0];
-//     const longLanguage = navigator.language.replaceAll('-', "_");
-//     langKey = langPrefix + language;
-
-//     // Make an exception for es-419
-//     if (navigator.language === "es-419") {
-//         language = 'es_419';
-//         langKey = langPrefix + language;
-//     }
-
-//     if (localStorage.getItem(langKey + VERSION) === null) {
-//         if (localStorage.getItem(langPrefix + longLanguage + VERSION) !== null) {
-//             Logger.Log(`using "${longLanguage}" lang`);
-//             langKey = langPrefix + longLanguage;
-//             return;
-//         }
-//         Logger.Log(`getting "${language}" lang`);
-
-//         let response = await fetch(CDN + `/_locales/${language}/messages.json`);
-
-//         if (!response.ok) {
-//             // Try full language key
-//             Logger.Warn(`failed to fetch SteamDB lang file for "${language}". Trying "${longLanguage}"`);
-//             langKey = langPrefix + longLanguage;
-
-//             response = await fetch(CDN + `/_locales/${longLanguage}/messages.json`);
-
-//             if (!response.ok) {
-//                 Logger.Warn(`failed to fetch SteamDB lang file for "${language}". Falling back to EN.`);
-//                 langKey = langPrefix + "en";
-//                 response = await fetch(CDN + "/_locales/en/messages.json");
-            
-//             }
-//         }
-//         localStorage.setItem(langKey + VERSION, JSON.stringify(await response.json()));
-//     } 
-
-//     Logger.Log(`using "${language}" lang`);
-// }
-
-// /* example record
-// {
-//     "message": "$positive$ of the $total$ reviews are positive (all purchase types)",
-//     "placeholders": {
-//         "positive": {
-//             "content": "$1",
-//             "example": "123,456"
-//         },
-//         "total": {
-//             "content": "$2",
-//             "example": "456,789"
-//         }
-//     }
-// }
-// */
-// augmentedBrowser.i18n.getMessage = function (messageKey: string, substitutions: string|string[]) {
-//     // Ignore invalid message key
-//     if (messageKey === '@@bidi_dir') {
-//         return messageKey;
-//     }
-
-//     if (!Array.isArray(substitutions)) {
-//         substitutions = [substitutions];
-//     }
-//     type LangType = Record<string, { message: string; placeholders?: Record<string, { content: string; }> }>|null;
-//     let lang: LangType = JSON.parse(localStorage.getItem(langKey + VERSION) ?? '{}');
-//     if (lang === null || Object.keys(lang).length === 0) {
-//         Logger.Error('SteamDB lang file not loaded in.');
-//         return messageKey;
-//     }
-
-//     const langObject = lang[messageKey];
-//     if (langObject === undefined) {
-//         Logger.Error(`Unknown message key: ${messageKey}`);
-//         return messageKey;
-//     }
-
-//     let messageTemplate = langObject.message;
-//     if (langObject.placeholders) {
-//         Object.entries(langObject.placeholders).forEach(([key, value], index) => {
-//             const regex = new RegExp(`\\$${key}\\$`, 'g');
-//             messageTemplate = messageTemplate.replace(regex, substitutions[index] || value.content);
-//         });
-//     }
-
-//     return messageTemplate;
-// }
-// augmentedBrowser.i18n.getUILanguage = function () {
-//     return 'en-US';
-// }
-// // #endregion
 
 //#region getResourceUrl
 augmentedBrowser.runtime.getURL = function (res: string) {
@@ -319,17 +167,18 @@ augmentedBrowser.runtime.getURL = function (res: string) {
         return getLoopbackCdn(res);
     }
     return getCdn(res);
-}
+};
 //#endregion
 
-// #region Background messaging
-window.clients = {matchAll: () => [{url: 'html/offscreen_domparser.html'}]}
+//#region Background messaging
+window.clients = {matchAll: () => [{url: 'html/offscreen_domparser.html'}]};
 window.chrome.offscreen = {};
-window.chrome.offscreen.closeDocument = () => {};
+window.chrome.offscreen.closeDocument = () => {
+};
 
-type MessageCallback = (message: any, sender: any, sendResponse: (response: any) => void) => any;
+type MessageCallback = (message: any, sender: any, sendResponse: (response: any) => void) => void;
 
-let messageListeners: MessageCallback[] = [];
+const messageListeners: MessageCallback[] = [];
 
 augmentedBrowser.runtime.onMessage = {};
 augmentedBrowser.runtime.onMessage.addListener = (callback: MessageCallback) => {
@@ -339,23 +188,25 @@ augmentedBrowser.runtime.onMessage.addListener = (callback: MessageCallback) => 
 augmentedBrowser.runtime.sendMessage = function (message: any, callback?: (response: any) => void): void {
     Logger.Debug('Sending message', message);
     messageListeners.forEach((listener) => {
-        listener(message, {tab: {}}, (response: any) => {
-            if (callback) {
-                callback(response);
-            }
-        });
+        listener(
+            message,
+            {tab: {}},
+            (response: any) => {
+                if (callback) {
+                    callback(response);
+                }
+            },
+        );
     });
-}
+};
 
 //#endregion
 
-//#region open newly created a tags in own way
-let oldCreateElement = document.createElement.bind(document);
+//#region open newly created <a> tags in own way
+const oldCreateElement = document.createElement.bind(document);
 
 // TODO: maybe make this an option
 const externalLinks = [
-    // TODO: move steamdb to popuplink when it works again
-    'steamdb.info',
     'twitch.tv',
     'youtube.com',
     'google.com',
@@ -368,57 +219,65 @@ const externalLinks = [
     'backpack.tf',
     'steamcardexchange.net',
 ];
-
 const popupLinks = [
+    'steamdb.info',
     'isthereanydeal.com',
-    'howlongtobeat.com'
+    'howlongtobeat.com',
 ];
+const EXTERNAL_PROTOCOL = 'steam://openurl_external/';
+
+function modifyHrefForExternalLinks(tag: HTMLAnchorElement): void {
+    externalLinks.forEach(link => {
+        if (tag.href.includes(link)) {
+            tag.href = EXTERNAL_PROTOCOL + tag.href;
+        }
+    });
+}
+
+function addPopupClickListener(tag: HTMLAnchorElement): void {
+    popupLinks.forEach(link => {
+        if (tag.href.includes(link)) {
+            tag.addEventListener('click', (event) => {
+                if (event.ctrlKey) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const ctrlClickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    ctrlKey: true,
+                });
+
+                tag.dispatchEvent(ctrlClickEvent);
+            });
+        }
+    });
+}
+
+function observeAnchorTag(tag: HTMLAnchorElement): void {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
+                modifyHrefForExternalLinks(tag);
+                addPopupClickListener(tag);
+                observer.disconnect();
+            }
+        });
+    });
+
+    observer.observe(tag, {attributes: true});
+}
 
 document.createElement = function (tagName: string, options?: ElementCreationOptions) {
-    let tag: HTMLAnchorElement = oldCreateElement(tagName, options);
+    const tag: HTMLAnchorElement = oldCreateElement(tagName, options);
 
-    if (tagName.toLowerCase() === "a") {
-        var callback = function(mutationsList: MutationRecord[], observer: MutationObserver) {
-            for(let mutation of mutationsList) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
-                    for (const link of externalLinks) {
-                        if (tag.href.includes(link)) {
-                            tag.href = "steam://openurl_external/" + tag.href;
-                            break;
-                        }
-                    }
-
-                    for (const link of popupLinks) {
-                        if (tag.href.includes(link)) {
-                            tag.addEventListener('click', (e) => {
-                                if (e.ctrlKey) {
-                                    return;
-                                }
-
-                                e.preventDefault();
-                                
-                                const event = new MouseEvent('click', { 
-                                    bubbles: true,
-                                    cancelable: true,
-                                    view: window,
-                                    ctrlKey: true,
-                                });
-                                tag.dispatchEvent(event);
-                            });
-                            break;
-                        }
-                    }
-
-                    observer.disconnect();
-                }
-            }
-        };
-
-        var observer = new MutationObserver(callback);
-
-        observer.observe(tag, { attributes: true });
+    if (tagName.toLowerCase() === 'a') {
+        observeAnchorTag(tag);
     }
 
     return tag;
-}
+};
 //#endregion

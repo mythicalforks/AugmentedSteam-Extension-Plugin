@@ -3,11 +3,13 @@ import { join } from 'path';
 
 interface PackageJson {
     version: string;
+
     [key: string]: unknown;
 }
 
 interface PluginJson {
     version: string;
+
     [key: string]: unknown;
 }
 

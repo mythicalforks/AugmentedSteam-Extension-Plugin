@@ -40,7 +40,7 @@ function convertToJs(): void {
                 combinedMatchesStr += ` && !(${excludes.map(m => `href.match("${urlToRegex(m)}")`).join(' || ')})`;
             }
             if (!combinedMatches[combinedMatchesStr]) {
-                combinedMatches[combinedMatchesStr] = { js: [], css: [] };
+                combinedMatches[combinedMatchesStr] = {js: [], css: []};
             }
             combinedMatches[combinedMatchesStr].js.push(...jsFiles);
             combinedMatches[combinedMatchesStr].css.push(...cssFiles);

@@ -1,16 +1,17 @@
 import './browser';
 // import { getLang } from './browser';
 import { getNeededScripts } from './script-loading';
-import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN } from "./shared";
-import { createFakeHeader } from './header';
+import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN } from './shared';
+import { createFakeSteamHeader } from './header';
 import { Millennium } from '@steambrew/webkit';
 
 async function loadScript(src: string) {
     let content = await fetch(src).then(response => response.text());
     content += '\n//# sourceURL=' + src;
-    content = content.replace('wrapAPIs(chrome)', 'wrapAPIs(window.augmentedBrowser)')
-                     .replace('globalThis.chrome', 'globalThis.augmentedBrowser')
-                     .replace('chrome.', 'augmentedBrowser.');
+    content = content
+        .replace('wrapAPIs(chrome)', 'wrapAPIs(window.augmentedBrowser)')
+        .replace('globalThis.chrome', 'globalThis.augmentedBrowser')
+        .replace('chrome.', 'augmentedBrowser.');
 
     return new Promise<void>((resolve, reject) => {
         const script = document.createElement('script');
@@ -42,7 +43,7 @@ async function loadStyle(src: string) {
     content = content.replaceAll('chrome-extension://__MSG_@@extension_id__', LOOPBACK_CDN);
 
     return new Promise<void>((resolve, reject) => {
-        var style = document.createElement('style');
+        const style = document.createElement('style');
         style.setAttribute('original-src', src);
         style.innerHTML = content;
 
@@ -56,7 +57,7 @@ async function loadStyle(src: string) {
 
 async function loadJsScripts(scripts: string[]) {
     const promises = [];
-    for (const script of scripts.filter(script => script.includes(".js"))) {
+    for (const script of scripts.filter(script => script.includes('.js'))) {
         promises.push(loadScript(getCdn(script)));
     }
 
@@ -65,7 +66,7 @@ async function loadJsScripts(scripts: string[]) {
 
 function loadCssScripts(scripts: string[]) {
     const promises = [];
-    for (const style of scripts.filter(script => script.includes(".css"))) {
+    for (const style of scripts.filter(script => script.includes('.css'))) {
         promises.push(loadStyle(getCdn(style)));
     }
 
@@ -87,7 +88,7 @@ async function testPerformance() {
         localStorage.setItem('time', (performance.now() - startTime + Number(prevTime)).toString());
         const prevCounter = localStorage.getItem('counter') ?? 0;
         localStorage.setItem('counter', (Number(prevCounter) + 1).toString());
-        Logger.Log(`Avg: ${Number(localStorage.getItem('time'))/Number(localStorage.getItem('counter'))}`);
+        Logger.Log(`Avg: ${Number(localStorage.getItem('time')) / Number(localStorage.getItem('counter'))}`);
     }
 }
 
@@ -96,7 +97,7 @@ function reset() {
     localStorage.removeItem('counter');
 }
 
-export default async function WebkitMain () {
+export default async function WebkitMain() {
     const href = window.location.href;
 
     if (href.includes('isthereanydeal.com')) {
@@ -104,14 +105,15 @@ export default async function WebkitMain () {
         // Page errored, do a force reload
         setTimeout(() => {
             window.location.reload();
-        }, 500)
+        }, 500);
     }
 
-    if (!href.includes("https://store.steampowered.com") && !href.includes("https://steamcommunity.com")) {
+
+    if (!href.includes('https://store.steampowered.com') && !href.includes('https://steamcommunity.com')) {
         return;
     }
 
-    testPerformance()
+    testPerformance();
 
     // Log all await calls
     // const originalThen = Promise.prototype.then;
@@ -121,10 +123,10 @@ export default async function WebkitMain () {
     //     console.log("Await called:", stack);
     //     return originalThen.call(this, onFulfilled, onRejected);
     // };
-    
-    Logger.Log("plugin is running");
 
-    await createFakeHeader();
+    Logger.Log('plugin is running');
+
+    await createFakeSteamHeader();
 
     await initCdn();
 
@@ -133,7 +135,7 @@ export default async function WebkitMain () {
     await Promise.all([
         loadCssScripts(scripts),
         loadScript(getCdn('js/background.js')),
-        loadScript(getCdn('js/offscreen_domparser.js')),    
+        loadScript(getCdn('js/offscreen_domparser.js')),
     ]);
 
     await loadJsScripts(scripts);
