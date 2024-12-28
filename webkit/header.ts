@@ -60,7 +60,7 @@ export async function createFakeHeader() {
 	} else {
 		const node = document.createElement('div');
 		node.innerHTML = legacyFakeHeader.replaceAll('%user_id%', steamid);
-		const pageContent = document.querySelector('.responsive_page_content');
+		const pageContent = document.querySelector('.responsive_page_content') ?? document.querySelector('.headerOverride');
 		pageContent.prepend(node);
 	}
 }

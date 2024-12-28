@@ -140,6 +140,7 @@ const interceptedUrls: RegExp[] = [
     /steamcommunity\.com\/profiles\/\d+\/$/,
     /steamcommunity\.com\/profiles\/\d+\/ajaxgetbadgeinfo/,
     /steamcommunity\.com\/inventory\//,
+    /store\.steampowered\.com\/steamaccount\/addfunds/,
 ];
 
 const backendFetch = callable<[{url: string}], string>('BackendFetch');
@@ -162,7 +163,9 @@ window.fetch = async (url: string | URL | Request, params?: RequestInit): Promis
             }
             const response = JSON.parse(await backendFetch({url: url.toString()})) as BackendResponse;
             
-            return new Response(response.body, {status: response.status, headers: response.headers});
+            let responseObject = new Response(response.body, {status: response.status, headers: response.headers});
+            Object.defineProperty(responseObject, "url", { value: response.url });
+            return responseObject;
         }
     }
 
@@ -312,7 +315,7 @@ window.fetch = async (url: string | URL | Request, params?: RequestInit): Promis
 
 //#region getResourceUrl
 augmentedBrowser.runtime.getURL = function (res: string) {
-    if (res.endsWith('.png')) {
+    if (res.endsWith('.png') || res.endsWith('.svg')) {
         return getLoopbackCdn(res);
     }
     return getCdn(res);
@@ -346,38 +349,76 @@ augmentedBrowser.runtime.sendMessage = function (message: any, callback?: (respo
 
 //#endregion
 
-// //#region add external to newly created a tags
-// let oldCreateElement = document.createElement.bind(document);
+//#region open newly created a tags in own way
+let oldCreateElement = document.createElement.bind(document);
 
-// document.createElement = function (tagName: string, options?: ElementCreationOptions) {
-//     let tag: HTMLAnchorElement = oldCreateElement(tagName, options);
+// TODO: maybe make this an option
+const externalLinks = [
+    // TODO: move steamdb to popuplink when it works again
+    'steamdb.info',
+    'twitch.tv',
+    'youtube.com',
+    'google.com',
+    'astats.nl',
+    'steamrep.com',
+    'steamgifts.com',
+    'steamtrades.com',
+    'barter.vg',
+    'achievementstats.com',
+    'backpack.tf',
+    'steamcardexchange.net',
+];
 
-//     if (tagName.toLowerCase() === "a") {
-//         var callback = function(mutationsList: MutationRecord[], observer: MutationObserver) {
-//             for(let mutation of mutationsList) {
-//                 if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
-//                     // if (!tag.href.includes('steampowered.com') && !tag.href.includes('steamcommunity.com')) {
-//                     //     tag.href = "steam://openurl_external/" + tag.href;
-//                     // }
-//                     if (tag.href.includes('steamdb.info') || tag.href.includes('pcgamingwiki.com')) {
-//                         tag.addEventListener('click', (e) => {
-//                             e.preventDefault();
+const popupLinks = [
+    'isthereanydeal.com',
+    'howlongtobeat.com'
+];
 
-//                             // TODO: find better way of opening popups
-//                             window.open(tag.href, 'BrowserViewPopup', `width=${window.screen.width*0.8},height=${window.screen.height*0.8},resizeable,status=0,toolbar=0,menubar=0,location=0`);
-//                         });
-//                     }
+document.createElement = function (tagName: string, options?: ElementCreationOptions) {
+    let tag: HTMLAnchorElement = oldCreateElement(tagName, options);
 
-//                     observer.disconnect();
-//                 }
-//             }
-//         };
+    if (tagName.toLowerCase() === "a") {
+        var callback = function(mutationsList: MutationRecord[], observer: MutationObserver) {
+            for(let mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
+                    for (const link of externalLinks) {
+                        if (tag.href.includes(link)) {
+                            tag.href = "steam://openurl_external/" + tag.href;
+                            break;
+                        }
+                    }
 
-//         var observer = new MutationObserver(callback);
+                    for (const link of popupLinks) {
+                        if (tag.href.includes(link)) {
+                            tag.addEventListener('click', (e) => {
+                                if (e.ctrlKey) {
+                                    return;
+                                }
 
-//         observer.observe(tag, { attributes: true });
-//     }
+                                e.preventDefault();
+                                
+                                const event = new MouseEvent('click', { 
+                                    bubbles: true,
+                                    cancelable: true,
+                                    view: window,
+                                    ctrlKey: true,
+                                });
+                                tag.dispatchEvent(event);
+                            });
+                            break;
+                        }
+                    }
 
-//     return tag;
-// }
+                    observer.disconnect();
+                }
+            }
+        };
+
+        var observer = new MutationObserver(callback);
+
+        observer.observe(tag, { attributes: true });
+    }
+
+    return tag;
+}
 //#endregion

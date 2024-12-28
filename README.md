@@ -7,4 +7,4 @@ This plugin ports the functionality of the [Augmented Steam Browser Extension](h
 
 ## TODO
 - [ ] README
-- [ ] React fake header doesn't always load in
+- [ ] Fetch headers in python

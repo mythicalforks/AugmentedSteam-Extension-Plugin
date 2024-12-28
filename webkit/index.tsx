@@ -99,6 +99,12 @@ function reset() {
 export default async function WebkitMain () {
     const href = window.location.href;
 
+    if (href.includes('isthereanydeal.com')) {
+        await Millennium.findElement(document, '.error-message');
+        // Page errored, do a force reload
+        window.location.reload();
+    }
+
     if (!href.includes("https://store.steampowered.com") && !href.includes("https://steamcommunity.com")) {
         return;
     }
