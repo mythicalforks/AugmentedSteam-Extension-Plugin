@@ -35,7 +35,7 @@ To configure the plugin:
    <br>2.5. Or just click on your profile top right, then Account details
 3. Look for the "Augmented Steam" button and click it
 
-Alternatively, you can access the options page directly by entering this URL in your Steam client:
+Alternatively, you can access the options page directly by entering this URL in your Steam client:  
 https://store.steampowered.com/account/?augmented-steam=true
 
 Here you can customize various features and behaviors of the Augmented Steam plugin to suit your preferences. Just like
