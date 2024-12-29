@@ -5,7 +5,7 @@
     "update-augmented-steam": "git submodule update --remote AugmentedSteam",
     "build-augmented-steam-dev": "cd AugmentedSteam && npm install && npm run build -- chrome",
     "build-augmented-steam": "cd AugmentedSteam && npm install && npm run build -- chrome --production",
-    "build": "npm run build-augmented-steam && node .\\helpers\\clean-maps.mjs && millennium-ttc --build prod"
+    "build": "npm run build-augmented-steam && node ./helpers/clean-maps.mjs && millennium-ttc --build prod"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

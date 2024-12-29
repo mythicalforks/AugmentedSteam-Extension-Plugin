@@ -21,7 +21,7 @@ def run_build():
 
     try:
         process = subprocess.Popen(
-            ['npm', 'run', 'build'],
+            ['bun', 'run', 'build'],
             shell=use_shell,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
