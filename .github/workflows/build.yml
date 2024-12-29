@@ -64,6 +64,6 @@ jobs:
         with:
           name: Augmented-Steam-plugin-${{ inputs.version }}
           path: temp_artifact/*
-          include-hidden-file: true
+          include-hidden-files: true
           if-no-files-found: error
           overwrite: true
