@@ -32,7 +32,7 @@ export async function initCdn() {
     }
     const envString = DEV ? 'dev' : 'prod';
     const extensionFolder = pluginDir.replace(/.*\\([^\\]+)\\([^\\]+)$/, '/$1/$2') + `/AugmentedSteam/dist/${envString}.chrome`;
-    CDN = 'https://s.ytimg.com/millennium-virtual' + extensionFolder;
+    CDN = 'https://pseudo.millennium.app' + extensionFolder;
 }
 
 declare global {

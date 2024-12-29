@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import escapeStringRegexp from 'escape-string-regexp';
+import clipboard from 'clipboardy';
 
 interface ContentScript {
     matches: string[];
@@ -27,6 +28,8 @@ function convertToJs(): void {
         const contentScripts = manifestData.content_scripts;
         const combinedMatches: { [key: string]: { js: string[]; css: string[] } } = {};
 
+        let output = '';
+
         for (const script of contentScripts) {
             const matches = script.matches;
             const excludes = script.exclude_matches;
@@ -37,7 +40,7 @@ function convertToJs(): void {
             combinedMatchesStr = `(${combinedMatchesStr})`;
             // Add the exclude_matches to the combinedMatchesStr
             if (script.exclude_matches) {
-                combinedMatchesStr += ` && !(${excludes.map(m => `href.match("${urlToRegex(m)}")`).join(' || ')})`;
+                combinedMatchesStr += ` && !(${excludes.map(m => `href.match(/${urlToRegex(m)}/)`).join(' || ')})`;
             }
             if (!combinedMatches[combinedMatchesStr]) {
                 combinedMatches[combinedMatchesStr] = {js: [], css: []};
@@ -55,15 +58,22 @@ function convertToJs(): void {
                 continue;
             }
 
-            console.log(`if (${match}) {`);
+            output += `if (${match}) {\n`;
             uniqueJsFiles.forEach(jsFile => {
-                console.log(`    scripts.push("${jsFile}");`);
+                output += `    scripts.push('${jsFile}');\n`;
             });
             uniqueCssFiles.forEach(cssFile => {
-                console.log(`    scripts.push("${cssFile}");`);
+                output += `    scripts.push('${cssFile}');\n`;
             });
-            console.log('}\n');
+            output += '}\n\n';
         }
+
+        output = output.trimEnd();
+
+        // Copy text to clipboard
+        clipboard.writeSync(output);
+
+        console.log('Copied to clipboard.');
     });
 }
 
