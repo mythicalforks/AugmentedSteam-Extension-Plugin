@@ -1,12 +1,11 @@
 import os
 import subprocess
-import sys
 import zipfile
 from pathlib import Path, PurePosixPath
 
 # Global configuration
 INCLUDED = {
-    '.millennium', 'AugmentedSteam/dist', 'backend', 'LICENSE',
+    '.millennium/Dist', 'AugmentedSteam/dist', 'backend', 'LICENSE',
     'README.md', 'plugin.json', 'requirements.txt'
 }
 
@@ -24,27 +23,17 @@ def run_build():
             ['bun', 'run', 'build'],
             shell=use_shell,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             universal_newlines=True,
             cwd=str(root_dir),
         )
 
-        finished = False
+        for line in process.stdout:
+            print(line, end='')
 
-        # Read real-time output
-        while True:
-            output = process.stdout.readline()
-            if output:
-                print(output.strip())
-            if "Build succeeded" in output:
-                finished = True
-            error = process.stderr.readline()
-            if error:
-                print(error.strip(), file=sys.stderr)
-            if output == '' and error == '' and process.poll() is not None:
-                break
+        process.wait()
 
-        if process.returncode != 0 or not finished:
+        if process.returncode != 0:
             print("Build failed")
             return False
 
