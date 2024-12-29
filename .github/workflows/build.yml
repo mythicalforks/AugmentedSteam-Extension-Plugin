@@ -16,7 +16,7 @@ on:
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact"
-        value: SteamDB-plugin-${{ inputs.version }}
+        value: Augmented-Steam-plugin-${{ inputs.version }}
         
 jobs:
   build:
@@ -25,12 +25,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
         
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-          
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -40,7 +43,7 @@ jobs:
         run: |
           bun install
           pip install -r requirements.txt
-          
+
       - name: Build and create zip
         run: python helpers/build_zip.py
         env:
@@ -49,12 +52,12 @@ jobs:
       - name: Extract zip for artifact
         run: |
           mkdir -p temp_artifact
-          unzip "SteamDB-plugin-${{ inputs.version }}.zip" -d temp_artifact/
+          unzip "Augmented-Steam-plugin-${{ inputs.version }}.zip" -d temp_artifact/
           
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SteamDB-plugin-${{ inputs.version }}
+          name: Augmented-Steam-plugin-${{ inputs.version }}
           path: temp_artifact/*
           if-no-files-found: error
           overwrite: true

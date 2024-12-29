@@ -4,7 +4,7 @@
     "watch": "nodemon --watch webkit --watch frontend --ext ts,tsx,js,jsx --exec \"millennium-ttc --build dev\"",
     "update-augmented-steam": "git submodule update --remote AugmentedSteam",
     "build-augmented-steam-dev": "cd AugmentedSteam && npm install && npm run build -- chrome",
-    "build-augmented-steam": "cd AugmentedSteam && npm install && npm run build -- chrome --production",
+    "build-augmented-steam": "cd AugmentedSteam && npm install && npm run build -- chrome --production && node .\\helpers\\clean-maps.mjs",
     "build": "npm run build-augmented-steam && millennium-ttc --build prod"
   },
   "devDependencies": {

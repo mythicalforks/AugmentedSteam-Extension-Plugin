@@ -2,17 +2,12 @@ import os
 import subprocess
 import sys
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 # Global configuration
-EXCLUDED_DIRS = {
-    '.git', '.venv', 'node_modules', 'helpers', 'webkit', 'frontend',
-    '__pycache__', 'Images', '.github',
-}
-
-EXCLUDED_FILES = {
-    '.gitignore', 'tsconfig.json', 'bun.lockb', 'package.json',
-    'steamdb-plugin.zip',
+INCLUDED = {
+    '.millennium', 'AugmentedSteam/Dist', 'backend', 'LICENSE',
+    'README.md', 'plugin.json', 'requirements.txt'
 }
 
 def run_build():
@@ -21,13 +16,12 @@ def run_build():
     root_dir = Path(__file__).parent.parent
     os.chdir(root_dir)
 
-    try:
-        # Use shell=True on Windows for local execution
-        use_shell = os.name == 'nt'  # True on Windows, False on Unix
+    # Windows needs shell=True
+    use_shell = os.name == 'nt'
 
-        # Run bun run build command
+    try:
         process = subprocess.Popen(
-            ['bun', 'run', 'build'],
+            ['npm', 'run', 'build'],
             shell=use_shell,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -37,18 +31,16 @@ def run_build():
 
         finished = False
 
-        # Print output in real-time
+        # Read real-time output
         while True:
             output = process.stdout.readline()
             if output:
                 print(output.strip())
             if "Build succeeded" in output:
                 finished = True
-            # Print any errors
             error = process.stderr.readline()
             if error:
                 print(error.strip(), file=sys.stderr)
-            # If process is finished, break the loop
             if output == '' and error == '' and process.poll() is not None:
                 break
 
@@ -63,56 +55,56 @@ def run_build():
         return False
 
 def should_include_file(file_path: Path, root_dir: Path) -> bool:
-    # Always include built files from Dist
-    if 'Dist' in str(file_path):
-        return file_path.name.endswith('.js')
-
-    # Check if file is in excluded directory
-    rel_path = file_path.relative_to(root_dir)
-    if any(part in EXCLUDED_DIRS for part in rel_path.parts):
-        return False
-
-    # Check if file is excluded
-    if file_path.name in EXCLUDED_FILES:
-        return False
-
-    return True
+    rel_path = PurePosixPath(file_path.relative_to(root_dir))  # Normalize path for consistent matching
+    for pattern in INCLUDED:
+        if rel_path.as_posix().startswith(pattern):  # Match patterns as prefixes for directories/files
+            return True
+    return False
 
 def create_zip():
-    # Get version from environment variable, default to empty string if not set
+    # Get version from environment variable
     version = os.environ.get('RELEASE_VERSION', '')
+
     if not version:
         print("Error: RELEASE_VERSION environment variable is required")
         return False
 
-    zip_name = f"SteamDB-plugin-{version}.zip"
+    zip_name = f"Augmented-Steam-plugin-{version}.zip"
 
-    # Get the root directory of the project
+    # Root and output directories
     root_dir = Path(__file__).parent.parent
     build_dir = root_dir / 'build'
     build_dir.mkdir(parents=True, exist_ok=True)
     zip_path = build_dir / zip_name
+
     print(f"\nCreating zip file: {zip_path}")
 
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(root_dir):
-            # Remove excluded directories to prevent walking into them
-            dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
+        for included_path in INCLUDED:
+            folder_path = root_dir / included_path
 
-            for file in files:
-                file_path = Path(root) / file
+            # Check if the included path exists
+            if not folder_path.exists():
+                print(f"Warning: {folder_path} does not exist. Skipping.")
+                continue
 
-                # Skip the zip file itself
-                if ".zip" in file_path.name:
-                    continue
+            # If it's a directory, include all its contents
+            if folder_path.is_dir():
+                for root, _, files in os.walk(folder_path):
+                    for file in files:
+                        file_path = Path(root) / file
+                        rel_path = file_path.relative_to(root_dir)
+                        zip_path_with_root = Path('AugmentedSteam-plugin') / rel_path
+                        print(f"Adding: {zip_path_with_root}")
+                        zipf.write(file_path, str(zip_path_with_root))
+            # If it's a file, directly add it
+            elif folder_path.is_file():
+                rel_path = folder_path.relative_to(root_dir)
+                zip_path_with_root = Path('AugmentedSteam-plugin') / rel_path
+                print(f"Adding file: {zip_path_with_root}")
+                zipf.write(folder_path, str(zip_path_with_root))
 
-                if should_include_file(file_path, root_dir):
-                    # Get the relative path and add root folder
-                    rel_path = file_path.relative_to(root_dir)
-                    zip_path_with_root = Path('SteamDB-plugin') / rel_path
-                    print(f"Adding: {zip_path_with_root}")
-                    zipf.write(file_path, str(zip_path_with_root))
-
+    print("\nZip file created successfully!")
     return True
 
 def main():
