@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 
 # Global configuration
 INCLUDED = {
-    '.millennium', 'AugmentedSteam/Dist', 'backend', 'LICENSE',
+    '.millennium', 'AugmentedSteam/dist', 'backend', 'LICENSE',
     'README.md', 'plugin.json', 'requirements.txt'
 }
 
