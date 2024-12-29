@@ -1,74 +1,102 @@
-// import { STORAGE_KEY } from "./browser";
-// import { CDN } from "./shared";
-//
-// export function injectPreferences() {
-//     let sidebarContainer = document.querySelector('.two_column.left');
-//     let mainContainer = document.querySelector('.two_column.right');
-//
-//     let steamdbOptions = document.createElement('div');
-//     steamdbOptions.setAttribute('id', 'steamdb-options');
-//     steamdbOptions.classList.add('nav_item');
-//     steamdbOptions.innerHTML = `<img class="ico16" src="${CDN}/icons/white.svg"> <span>SteamDB Options</span>`;
-//
-//     sidebarContainer.appendChild(steamdbOptions);
-//
-//     steamdbOptions.addEventListener('click', async () => {
-//         sidebarContainer.querySelectorAll('.active').forEach((element) => {
-//             element.classList.remove('active');
-//         });
-//         steamdbOptions.classList.toggle('active');
-//
-//         let url = new URL(window.location.href);
-//         url.searchParams.set('steamdb', 'true');
-//         window.history.replaceState({}, '', url.href);
-//
-//         let optionsHtml = await (await fetch(`${CDN}/options/options.html`)).text();
-//         loadStyle();
-//         loadScript();
-//
-//         mainContainer.innerHTML = optionsHtml;
-//
-//         // Create reset button
-//         let resetButton = document.createElement('div');
-//         resetButton.title = 'Will reset all options to their default values. No Warning!';
-//         resetButton.classList.add('queue_control_button');
-//         resetButton.style.marginTop = '1rem';
-//         resetButton.innerHTML = `<div class="btnv6_blue_hoverfade btn_medium queue_btn_inactive">
-//                                     <span>Reset options!</span>
-//                                 </div>`;
-//         resetButton.addEventListener('click', async () => {
-//             if (resetButton.style.backgroundColor === 'red') {
-//                 localStorage.removeItem(STORAGE_KEY); window.location.reload();
-//             } else {
-//                 resetButton.style.backgroundColor = 'red';
-//                 resetButton.style.color = 'white';
-//                 resetButton.innerHTML = `<div class="btnv6_blue_hoverfade btn_medium queue_btn_inactive" style="background-color: red !important; color: white !important;">
-// 										    <span>Are you sure?</span>
-// 									    </div>`
-//             }
-//         });
-//
-//         mainContainer.appendChild(resetButton);
-//     });
-//
-//     let url = new URL(window.location.href);
-//     if (url.searchParams.get('steamdb') === 'true') {
-//         steamdbOptions.click();
-//     }
-// }
-//
-// async function loadStyle() {
-//     let styleContent = await (await fetch(`${CDN}/options/options.css`)).text();
-//
-//     let style = document.createElement('style');
-//     style.innerHTML = styleContent;
-//     document.head.appendChild(style);
-// }
-//
-// async function loadScript() {
-//     let scriptContent = await (await fetch(`${CDN}/options/options.js`)).text();
-//
-//     let script = document.createElement('script');
-//     script.innerHTML = scriptContent;
-//     document.head.appendChild(script);
-// }
+import { getCdn, getLoopbackCdn } from './shared';
+import { Millennium } from '@steambrew/webkit';
+
+export function injectPreferences() {
+    const sidebarContainer = document.querySelector('.two_column.left');
+    const mainContainer = document.querySelector('.two_column.right');
+
+    const augmentedSteamOptions = document.createElement('div');
+    augmentedSteamOptions.style.cursor = 'pointer';
+    augmentedSteamOptions.classList.add('nav_item');
+    augmentedSteamOptions.innerHTML = `<img class="ico16" src="${getLoopbackCdn('img/logo/as48.png')}" alt="logo"> <span>Augmented Steam</span>`;
+
+    sidebarContainer.appendChild(augmentedSteamOptions);
+
+    augmentedSteamOptions.addEventListener('click', async () => {
+        sidebarContainer.querySelectorAll('.active').forEach((element) => {
+            element.classList.remove('active');
+        });
+        augmentedSteamOptions.classList.toggle('active');
+
+        const url = new URL(window.location.href);
+        url.search = ''; // Removes all searchParams from the URL
+        url.searchParams.set('augmented-steam', 'true');
+        window.history.replaceState({}, '', url.href);
+
+        let optionsHtml = await (await fetch(`${getLoopbackCdn('html/options.html')}`)).text();
+        optionsHtml = optionsHtml.replace('<base target="_blank">', '');
+        mainContainer.innerHTML = warningHTML + optionsHtml;
+
+        await Promise.all([
+            loadStyle(),
+            loadScript(),
+        ]);
+
+        document.dispatchEvent(new Event('initAugmentedSteamOptions'));
+
+        const button = (await Millennium.findElement(document, '.buttons.svelte-1nzirk3'))[0];
+        const clearCacheButton = document.createElement('button');
+        clearCacheButton.onclick = () => {
+            if (!window.confirm('Are you sure you want to clear the cache?')) {
+                return;
+            }
+
+            window.augmentedBrowser.runtime.sendMessage({action: 'cache.clear'}, () => {
+                window.location.reload();
+            });
+        };
+
+        const span = document.createElement('span');
+        span.dataset.tooltipText = 'This may fix some issues with the plugin.';
+        span.innerText = 'Clear cache';
+        clearCacheButton.appendChild(span);
+
+        button.appendChild(clearCacheButton);
+    });
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('augmented-steam') === 'true') {
+        augmentedSteamOptions.click();
+    }
+}
+
+async function loadStyle() {
+    let styleContent = await (await fetch(getLoopbackCdn('css/options.css'))).text();
+    styleContent = styleContent.replace(/(?<!transparent);/g, ' !important;');
+
+    const style = document.createElement('style');
+    style.innerHTML = styleContent;
+    document.head.appendChild(style);
+}
+
+async function loadScript() {
+    let scriptContent = await (await fetch(getCdn('js/options.js'))).text();
+    scriptContent += '\n//# sourceURL=' + getCdn('js/options.js');
+    scriptContent = scriptContent
+        .replace('wrapAPIs(chrome)', 'wrapAPIs(window.augmentedBrowser)')
+        .replace('globalThis.chrome', 'globalThis.augmentedBrowser')
+        .replace('document.addEventListener("DOMContentLoaded"', 'document.addEventListener("initAugmentedSteamOptions"')
+        .replace('../img/logo/logo.svg', getLoopbackCdn('img/logo/logo.svg'));
+
+    const script = document.createElement('script');
+    script.innerHTML = scriptContent;
+    document.head.appendChild(script);
+}
+
+const warningHTML = `
+<div style="   
+    background-color: rgba(217,116,0,0.5);
+    border-radius: 15px;
+    position: absolute;
+    margin-top: -10rem;
+    padding: 1.5rem;
+    width: 35%;
+    color: white;
+">
+<h3>WARNING!</h3>
+<p style="font-size: 14px; margin: 10px 0;">
+    This settings page is a work in progress and will be rewritten in the future. As a result, not all features might work as intended. Please refrain from reporting bugs related to this page.
+    All community settings don't work.
+</p>
+</div>
+`;

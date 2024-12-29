@@ -218,11 +218,13 @@ const externalLinks = [
     'achievementstats.com',
     'backpack.tf',
     'steamcardexchange.net',
+    'augmentedsteam.com',
 ];
 const popupLinks = [
     'steamdb.info',
     'isthereanydeal.com',
     'howlongtobeat.com',
+    'pcgamingwiki.com',
 ];
 const EXTERNAL_PROTOCOL = 'steam://openurl_external/';
 

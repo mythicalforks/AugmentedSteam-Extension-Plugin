@@ -4,6 +4,7 @@ import { getNeededScripts } from './script-loading';
 import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN } from './shared';
 import { createFakeSteamHeader } from './header';
 import { Millennium } from '@steambrew/webkit';
+import { injectPreferences } from './preferences';
 
 async function loadScript(src: string) {
     let content = await fetch(src).then(response => response.text());
@@ -139,4 +140,8 @@ export default async function WebkitMain() {
     ]);
 
     await loadJsScripts(scripts);
+
+    if (window.location.href.includes('https://store.steampowered.com/account')) {
+        injectPreferences();
+    }
 }
