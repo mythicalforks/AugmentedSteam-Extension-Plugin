@@ -3,7 +3,7 @@ import { callable } from '@steambrew/webkit';
 export const VERSION = '4.2.1';
 export let CDN: string;
 export let LOOPBACK_CDN: string = 'https://steamloopback.host/AugmentedSteam';
-export const DEV = true;
+export const DEV = false;
 
 export function getCdn(path: string) {
     if (path.startsWith('/')) {

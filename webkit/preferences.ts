@@ -73,10 +73,9 @@ async function loadScript() {
     let scriptContent = await (await fetch(getCdn('js/options.js'))).text();
     scriptContent += '\n//# sourceURL=' + getCdn('js/options.js');
     scriptContent = scriptContent
-        .replace('wrapAPIs(chrome)', 'wrapAPIs(window.augmentedBrowser)')
-        .replace('globalThis.chrome', 'globalThis.augmentedBrowser')
-        .replace('document.addEventListener("DOMContentLoaded"', 'document.addEventListener("initAugmentedSteamOptions"')
-        .replace('../img/logo/logo.svg', getLoopbackCdn('img/logo/logo.svg'));
+        .replaceAll('chrome', 'augmentedBrowser')
+        .replaceAll('document.addEventListener("DOMContentLoaded"', 'document.addEventListener("initAugmentedSteamOptions"')
+        .replaceAll('../img/logo/logo.svg', getLoopbackCdn('img/logo/logo.svg'));
 
     const script = document.createElement('script');
     script.innerHTML = scriptContent;

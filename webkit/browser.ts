@@ -171,9 +171,9 @@ augmentedBrowser.runtime.getURL = function (res: string) {
 //#endregion
 
 //#region Background messaging
-window.clients = {matchAll: () => [{url: 'html/offscreen_domparser.html'}]};
-window.chrome.offscreen = {};
-window.chrome.offscreen.closeDocument = () => {
+augmentedBrowser.clients = {matchAll: () => [{url: 'html/offscreen_domparser.html'}]};
+augmentedBrowser.offscreen = {};
+augmentedBrowser.offscreen.closeDocument = () => {
 };
 
 type MessageCallback = (message: any, sender: any, sendResponse: (response: any) => void) => void;

@@ -3,13 +3,13 @@ import os
 import shutil
 
 import Millennium
-import PluginUtils
+import PluginUtils  # type: ignore
 import requests
 
 logger = PluginUtils.Logger("augmented-steam")
 
 CSS_ID = None
-DEBUG = True
+DEBUG = False
 
 def GetPluginDir():
     return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))

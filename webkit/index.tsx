@@ -8,11 +8,10 @@ import { injectPreferences } from './preferences';
 
 async function loadScript(src: string) {
     let content = await fetch(src).then(response => response.text());
-    content += '\n//# sourceURL=' + src;
     content = content
-        .replace('wrapAPIs(chrome)', 'wrapAPIs(window.augmentedBrowser)')
-        .replace('globalThis.chrome', 'globalThis.augmentedBrowser')
-        .replace('chrome.', 'augmentedBrowser.');
+        .replaceAll('chrome', 'augmentedBrowser')
+        .replaceAll('clients', 'augmentedBrowser.clients');
+    content += '\n//# sourceURL=' + src;
 
     return new Promise<void>((resolve, reject) => {
         const script = document.createElement('script');
@@ -30,14 +29,6 @@ async function loadScript(src: string) {
         resolve();
     });
 }
-
-// function loadScriptWithContent(scriptString: string) {
-//     var script = document.createElement('script');
-//     script.setAttribute('type', 'text/javascript');
-//     script.innerHTML = scriptString;
-
-//     document.head.appendChild(script);
-// }
 
 async function loadStyle(src: string) {
     let content = await fetch(src).then(response => response.text());
