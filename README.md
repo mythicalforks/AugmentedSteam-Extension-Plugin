@@ -15,7 +15,7 @@ each feature or the [extension page](https://augmentedsteam.com/).
 3. Place the plugin files in your Millennium plugins directory (should be a plugins folder in your Steam client
    directory)
 4. Restart your Steam client
-5. Enable the SteamDB plugin in the Millennium plugin menu
+5. Enable the Augmented Steam plugin in the Millennium plugin menu
 6. FULLY restart the Steam client again
 
 ## Usage
