@@ -239,7 +239,7 @@ function modifyHrefForExternalLinks(tag: HTMLAnchorElement): void {
 function addPopupClickListener(tag: HTMLAnchorElement): void {
     popupLinks.forEach(link => {
         if (tag.href.includes(link)) {
-            tag.addEventListener('click', (event) => {
+            tag.onclick = (event) => {
                 if (event.ctrlKey) {
                     return;
                 }
@@ -254,7 +254,7 @@ function addPopupClickListener(tag: HTMLAnchorElement): void {
                 });
 
                 tag.dispatchEvent(ctrlClickEvent);
-            });
+            };
         }
     });
 }
