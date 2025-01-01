@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.0.0...v1.1.0) (2025-01-01)
+
+
+### Bug Fixes
+
+* .releaserc ([b59d978](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/b59d978ba100b020b0eff0a5d3ce6d514b7e8de5))
+
+
+### Features
+
+* Show HLTB times in library game details ([6532b0d](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/6532b0d7e178e66b2b54603a7e0db42eb4014cc6))
+* Show player count in library game details ([2a8d851](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/2a8d85166fbbebf40817bf40e7fe9e4d5b44f43e))
+
 # 1.0.0 (2024-12-30)
 
 
