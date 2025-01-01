@@ -41,9 +41,26 @@ async function injectHltbData(appId: string): Promise<void> {
         return;
     }
 
-    infoContainer.appendChild(createInfoWithUrl('Main Story:', toHrs(appData.story), appData.url));
-    infoContainer.appendChild(createInfoWithUrl('Main + Extras:', toHrs(appData.extras), appData.url));
-    infoContainer.appendChild(createInfoWithUrl('Completionist:', toHrs(appData.complete), appData.url));
+    const numberFormatter = new Intl.NumberFormat();
+    const createBr = () => {
+        const infoBr = mainDocument.createElement('br');
+        infoBr.classList.add('hltb-info');
+        return infoBr;
+    };
+
+    if (appData.hltb !== null) {
+        infoContainer.appendChild(createBr());
+        infoContainer.appendChild(createInfoWithUrl('Main Story:', toHrs(appData.hltb.story), appData.hltb.url));
+        infoContainer.appendChild(createInfoWithUrl('Main + Extras:', toHrs(appData.hltb.extras), appData.hltb.url));
+        infoContainer.appendChild(createInfoWithUrl('Completionist:', toHrs(appData.hltb.complete), appData.hltb.url));
+    }
+    if (appData.players != null) {
+        const steamdbUrl = `https://steamdb.info/app/${appId}/charts/`;
+        infoContainer.appendChild(createBr());
+        infoContainer.appendChild(createInfoWithUrl('Playing now:', numberFormatter.format(appData.players.recent), steamdbUrl));
+        infoContainer.appendChild(createInfoWithUrl('24-hour peak:', numberFormatter.format(appData.players.peak_today), steamdbUrl));
+        infoContainer.appendChild(createInfoWithUrl('All-time peak:', numberFormatter.format(appData.players.peak_all), steamdbUrl));
+    }
 }
 
 function attachListeners(appId: string, infoButton: HTMLElement) {

@@ -1,24 +1,31 @@
 const STORAGE_KEY = 'augmented-hltb-cache';
-const CACHE_TIME = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
 
-type HltbData = {
-    story: number | null;
-    extras: number | null;
-    complete: number | null;
-    url: string;
+type StoreData = {
+    players: {
+        recent: number,
+        peak_today: number,
+        peak_all: number
+    },
+    hltb: {
+        story: number | null;
+        extras: number | null;
+        complete: number | null;
+        url: string;
+    }
 };
 
 type StorageData = {
-    data: HltbData;
+    data: StoreData;
     expiry: number;
 };
 
-async function fetchStorePageData(appid: string): Promise<HltbData> {
+async function fetchStorePageData(appid: string): Promise<StoreData> {
     const response = await fetch(`https://api.augmentedsteam.com/app/${appid}/v2`);
-    return (await response.json())?.hltb;
+    return await response.json();
 }
 
-export async function getHltbData(appid: string): Promise<HltbData> {
+export async function getHltbData(appid: string): Promise<StoreData> {
     const cachedData: Record<string, StorageData> = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     let appData = cachedData[appid];
 
