@@ -1,5 +1,7 @@
 import { Millennium } from '@steambrew/client';
+import { initHltbInjection } from './HltbInjection';
 
+//#region Steamid
 let steamID = -1;
 
 async function getSteamId() {
@@ -11,8 +13,11 @@ async function getSteamId() {
 Millennium.exposeObj({
     getSteamId: () => steamID,
 });
+//#endregion
 
 // Entry point on the front end of your plugin
 export default async function PluginMain() {
     steamID = await getSteamId();
+
+    initHltbInjection();
 }
