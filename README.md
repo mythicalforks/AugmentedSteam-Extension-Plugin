@@ -6,7 +6,9 @@ This plugin ports the functionality of the [Augmented Steam Browser Extension](h
 > Pretty much all the Augmented Steam extension's features are included in this plugin.
 
 See the [AugmentedSteam Browser Extension](https://github.com/IsThereAnyDeal/AugmentedSteam) for more details about
-each feature or the [extension page](https://augmentedsteam.com/).
+each feature or the [extension page](https://augmentedsteam.com/).  
+Also some features from the extension ported to the library see
+[Library extra details](#extra-library-details)
 
 ## Installation
 
@@ -47,6 +49,12 @@ browser extension.
 #### Store
 
 ![Augmented Steam store page](Images/steam_store.png)
+
+### Extra library details
+
+After clicking on the (i) in the library you will now also see the HowLongToBeat times and player count in the game
+details
+![Library extra details](Images/library_details.png)
 
 #### Options page
 
