@@ -95,14 +95,14 @@ async function addHltbData() {
         return;
     }
 
-    const appId = appIconElement.src.match(/assets\/(\d+)/)?.[1];
-    if (!appId) {
-        console.error('[AugmentedSteam] Could not find app id');
+    if (infoButton.getAttribute('hltb-click-listener') === 'true') {
         setTimeout(addHltbData, 100);
         return;
     }
 
-    if (infoButton.getAttribute('hltb-click-listener') === 'true') {
+    const appId = appIconElement.src.match(/assets\/(\d+)/)?.[1];
+    if (!appId) {
+        console.error('[AugmentedSteam] Could not find app id');
         setTimeout(addHltbData, 100);
         return;
     }
