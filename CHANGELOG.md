@@ -1,3 +1,14 @@
+## [1.1.1](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.0...v1.1.1) (2025-01-03)
+
+
+### Bug Fixes
+
+* AugmentedSteam build not installing dev dependencies ([784f231](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/784f231398af83b543140f0055b976572bc407e4))
+* just fully remove unused react dependency to fix build ([cccdbe4](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/cccdbe4264285b6a2326c7c0b5e258ea3f527bcc))
+* library info sometimes fully disappearing by now try catching it ([8f7e9bd](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/8f7e9bd548a197d07d70b8092667104ca6ac37c3))
+* library info sometimes not loading in ([1dcd728](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/1dcd72859966e9608877bcaa889fd8eca212ae8a))
+* library info sometimes not loading in ([0f699d5](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/0f699d50323b4b118e68b84dffd7752f5c38fa8d))
+
 # [1.1.0](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.0.0...v1.1.0) (2025-01-01)
 
 
