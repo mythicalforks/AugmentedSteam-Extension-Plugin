@@ -20,11 +20,14 @@ function toHrs(minutes: number | null): string {
 }
 
 let mainDocument: Document;
-let lastAppID = '';
 
 async function findElement(selector: string): Promise<Element | null> {
-    const elements = await Millennium.findElement(mainDocument, selector);
-    return elements.length !== 0 ? elements[0] : null;
+    try {
+        const elements = await Millennium.findElement(mainDocument, selector);
+        return elements[0];
+    } catch (_) {
+        return null;
+    }
 }
 
 async function injectHltbData(appId: string): Promise<void> {
@@ -85,7 +88,7 @@ function attachListeners(appId: string, infoButton: HTMLElement) {
 
 async function addHltbData() {
     const appIconElement = await findElement('._3NBxSLAZLbbbnul8KfDFjw._2dzwXkCVAuZGFC-qKgo8XB') as HTMLImageElement;
-    const infoButton = (await findElement('._3VQUewWB8g6Z5qB4C7dGFr ._3qDWQGB0rtwM3qpXTb11Q-.Focusable .zvLq1GUCH3yLuqv_TXBJ1')).parentElement;
+    const infoButton = (await findElement('._3VQUewWB8g6Z5qB4C7dGFr ._3qDWQGB0rtwM3qpXTb11Q-.Focusable .zvLq1GUCH3yLuqv_TXBJ1'))?.parentElement;
 
     if (!appIconElement || !infoButton) {
         setTimeout(addHltbData, 100);
@@ -99,12 +102,11 @@ async function addHltbData() {
         return;
     }
 
-    if (appId === lastAppID || infoButton.getAttribute('hltb-click-listener') === 'true') {
+    if (infoButton.getAttribute('hltb-click-listener') === 'true') {
         setTimeout(addHltbData, 100);
         return;
     }
 
-    lastAppID = appId;
     infoButton.setAttribute('hltb-click-listener', 'true');
 
     attachListeners(appId, infoButton);
