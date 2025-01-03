@@ -87,31 +87,36 @@ function attachListeners(appId: string, infoButton: HTMLElement) {
 }
 
 async function addHltbData() {
-    const appIconElement = await findElement('._3NBxSLAZLbbbnul8KfDFjw._2dzwXkCVAuZGFC-qKgo8XB') as HTMLImageElement;
-    const infoButton = (await findElement('._3VQUewWB8g6Z5qB4C7dGFr ._3qDWQGB0rtwM3qpXTb11Q-.Focusable .zvLq1GUCH3yLuqv_TXBJ1'))?.parentElement;
+    try {
+        const appIconElement = await findElement('._3NBxSLAZLbbbnul8KfDFjw._2dzwXkCVAuZGFC-qKgo8XB') as HTMLImageElement;
+        const infoButton = (await findElement('._3VQUewWB8g6Z5qB4C7dGFr ._3qDWQGB0rtwM3qpXTb11Q-.Focusable .zvLq1GUCH3yLuqv_TXBJ1'))?.parentElement;
 
-    if (!appIconElement || !infoButton) {
+        if (!appIconElement || !infoButton) {
+            setTimeout(addHltbData, 100);
+            return;
+        }
+
+        if (infoButton.getAttribute('hltb-click-listener') === 'true') {
+            setTimeout(addHltbData, 100);
+            return;
+        }
+
+        const appId = appIconElement.src.match(/assets\/(\d+)/)?.[1];
+        if (!appId) {
+            console.error('[AugmentedSteam] Could not find app id');
+            setTimeout(addHltbData, 100);
+            return;
+        }
+
+        infoButton.setAttribute('hltb-click-listener', 'true');
+
+        attachListeners(appId, infoButton);
+
         setTimeout(addHltbData, 100);
-        return;
+    } catch (error) {
+        setTimeout(addHltbData, 500);
+        throw error;
     }
-
-    if (infoButton.getAttribute('hltb-click-listener') === 'true') {
-        setTimeout(addHltbData, 100);
-        return;
-    }
-
-    const appId = appIconElement.src.match(/assets\/(\d+)/)?.[1];
-    if (!appId) {
-        console.error('[AugmentedSteam] Could not find app id');
-        setTimeout(addHltbData, 100);
-        return;
-    }
-
-    infoButton.setAttribute('hltb-click-listener', 'true');
-
-    attachListeners(appId, infoButton);
-
-    setTimeout(addHltbData, 100);
 }
 
 export function initHltbInjection() {
