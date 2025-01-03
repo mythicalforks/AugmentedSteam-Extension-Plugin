@@ -8,20 +8,29 @@ const augmentedBrowser = window.augmentedBrowser;
 
 //#region Defaults
 
-augmentedBrowser.runtime = {};
-augmentedBrowser.runtime.getManifest = () => { return {version: VERSION}; };
-augmentedBrowser.runtime.id = 'kdbmhfkmnlmbkgbabkdealhhbfhlmmon'; // Chrome
+augmentedBrowser.runtime = {
+    getManifest: () => { return {version: VERSION}; },
+    id: 'kdbmhfkmnlmbkgbabkdealhhbfhlmmon', // Chrome
+    onInstalled: {
+        addListener: () => {},
+    },
+    onStartup: {
+        addListener: () => {},
+    },
+    getURL: (resource: string) => {
+        if (resource.endsWith('.png') || resource.endsWith('.svg')) {
+            return getLoopbackCdn(resource);
+        }
+        return getCdn(resource);
+    },
+};
 
-augmentedBrowser.runtime.onInstalled = {};
-augmentedBrowser.runtime.onInstalled.addListener = () => {};
-
-augmentedBrowser.runtime.onStartup = {};
-augmentedBrowser.runtime.onStartup.addListener = () => {};
-
-augmentedBrowser.contextMenus = {};
-augmentedBrowser.contextMenus.onClicked = {};
-augmentedBrowser.contextMenus.onClicked.addListener = () => {};
-augmentedBrowser.contextMenus.onClicked.hasListener = () => {};
+augmentedBrowser.contextMenus = {
+    onClicked: {
+        addListener: () => {},
+        hasListener: () => {},
+    },
+};
 
 //#endregion
 
@@ -29,9 +38,6 @@ augmentedBrowser.contextMenus.onClicked.hasListener = () => {};
 
 const SYNC_STORAGE_KEY = 'augmented-options-sync';
 const LOCAL_STORAGE_KEY = 'augmented-options-local';
-
-augmentedBrowser.storage = {};
-augmentedBrowser.storage.sync = {};
 
 async function StorageGet(storageKey: string, items?: string | string[] | Record<string, any>, callback?: Function): Promise<any> {
     const storedData = localStorage.getItem(storageKey);
@@ -110,13 +116,18 @@ async function StorageRemove(storageKey: string, key: string | string[], callbac
     }
 }
 
-augmentedBrowser.storage.sync.get = (items?: any, callback?: Function) => StorageGet(SYNC_STORAGE_KEY, items, callback);
-augmentedBrowser.storage.sync.set = (item: any, callback?: Function) => StorageSet(SYNC_STORAGE_KEY, item, callback);
-augmentedBrowser.storage.sync.remove = (key: any, callback?: Function) => StorageRemove(SYNC_STORAGE_KEY, key, callback);
-augmentedBrowser.storage.local = {};
-augmentedBrowser.storage.local.get = (items?: any, callback?: Function) => StorageGet(LOCAL_STORAGE_KEY, items, callback);
-augmentedBrowser.storage.local.set = (item: any, callback?: Function) => StorageSet(LOCAL_STORAGE_KEY, item, callback);
-augmentedBrowser.storage.local.remove = (key: any, callback?: Function) => StorageRemove(LOCAL_STORAGE_KEY, key, callback);
+augmentedBrowser.storage = {
+    sync: {
+        get: (items?: any, callback?: Function) => StorageGet(SYNC_STORAGE_KEY, items, callback),
+        set: (item: any, callback?: Function) => StorageSet(SYNC_STORAGE_KEY, item, callback),
+        remove: (key: any, callback?: Function) => StorageRemove(SYNC_STORAGE_KEY, key, callback),
+    },
+    local: {
+        get: (items?: any, callback?: Function) => StorageGet(LOCAL_STORAGE_KEY, items, callback),
+        set: (item: any, callback?: Function) => StorageSet(LOCAL_STORAGE_KEY, item, callback),
+        remove: (key: any, callback?: Function) => StorageRemove(LOCAL_STORAGE_KEY, key, callback),
+    },
+};
 
 //#endregion
 
@@ -134,11 +145,11 @@ const interceptedUrls: RegExp[] = [
 const backendFetch = callable<[{ url: string }], string>('BackendFetch');
 
 type BackendResponse = {
-    'ok': boolean,
-    'status': number,
-    'url': string,
-    'headers': Record<string, string>,
-    'body': string
+    ok: boolean,
+    status: number,
+    url: string,
+    headers: Record<string, string>,
+    body: string
 };
 
 window.fetch = async (url: string | URL | Request, params?: RequestInit): Promise<Response> => {
@@ -161,28 +172,22 @@ window.fetch = async (url: string | URL | Request, params?: RequestInit): Promis
 };
 //#endregion
 
-//#region getResourceUrl
-augmentedBrowser.runtime.getURL = function (res: string) {
-    if (res.endsWith('.png') || res.endsWith('.svg')) {
-        return getLoopbackCdn(res);
-    }
-    return getCdn(res);
-};
-//#endregion
-
 //#region Background messaging
-augmentedBrowser.clients = {matchAll: () => [{url: 'html/offscreen_domparser.html'}]};
-augmentedBrowser.offscreen = {};
-augmentedBrowser.offscreen.closeDocument = () => {
+augmentedBrowser.clients = {
+    matchAll: () => [{url: 'html/offscreen_domparser.html'}],
+};
+augmentedBrowser.offscreen = {
+    closeDocument: () => {},
 };
 
 type MessageCallback = (message: any, sender: any, sendResponse: (response: any) => void) => void;
 
 const messageListeners: MessageCallback[] = [];
 
-augmentedBrowser.runtime.onMessage = {};
-augmentedBrowser.runtime.onMessage.addListener = (callback: MessageCallback) => {
-    messageListeners.push(callback);
+augmentedBrowser.runtime.onMessage = {
+    addListener: (callback: MessageCallback) => {
+        messageListeners.push(callback);
+    },
 };
 
 augmentedBrowser.runtime.sendMessage = function (message: any, callback?: (response: any) => void): void {
