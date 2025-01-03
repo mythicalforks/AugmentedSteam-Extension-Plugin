@@ -23,7 +23,7 @@ export function injectPreferences() {
         url.searchParams.set('augmented-steam', 'true');
         window.history.replaceState({}, '', url.href);
 
-        let optionsHtml = await (await fetch(`${getLoopbackCdn('html/options.html')}`)).text();
+        let optionsHtml = await (await fetch(`${getCdn('html/options.html')}`)).text();
         optionsHtml = optionsHtml.replace('<base target="_blank">', '');
         mainContainer.innerHTML = warningHTML + optionsHtml;
 
@@ -61,8 +61,8 @@ export function injectPreferences() {
 }
 
 async function loadStyle() {
-    let styleContent = await (await fetch(getLoopbackCdn('css/options.css'))).text();
-    styleContent = styleContent.replace(/(?<!transparent);/g, ' !important;');
+    let styleContent = await (await fetch(getCdn('css/options.css'))).text();
+    styleContent = styleContent.replace(/(?<!transparent)([;}])/g, ' !important$1');
 
     const style = document.createElement('style');
     style.innerHTML = styleContent;

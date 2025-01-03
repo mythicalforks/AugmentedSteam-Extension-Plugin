@@ -44,21 +44,15 @@ class Plugin:
         logger.log(f"Copying frontend files from {augmentedSteamPath} to {steamUIPath}")
         try:
             os.makedirs(os.path.dirname(steamUIPath), exist_ok=True)
-            # Copy folders html, img and css/options.css and js/options.js
-            for folderName in ['html', 'img']:
+            # Copy img folder to steamui
+            for folderName in ['img']:
                 folderPath = os.path.join(augmentedSteamPath, folderName)
                 if os.path.exists(folderPath):
                     destPath = os.path.join(steamUIPath, folderName)
                     logger.log(f"Copying folder {folderName} from {folderPath} to {destPath}")
                     shutil.copytree(folderPath, destPath, dirs_exist_ok=True)
-
-            for filename in ['css\\options.css', 'js\\options.js']:
-                filePath = os.path.join(augmentedSteamPath, filename)
-                if os.path.exists(filePath):
-                    destPath = os.path.join(steamUIPath, filename)
-                    logger.log(f"Copying file {filename} from {filePath} to {destPath}")
-                    os.makedirs(os.path.dirname(destPath), exist_ok=True)
-                    shutil.copyfile(filePath, destPath)
+                else:
+                    logger.error(f"Folder {folderName} does not exist in {folderPath}")
 
         except Exception as e:
             logger.error(f"Failed to copy files, {e}")
