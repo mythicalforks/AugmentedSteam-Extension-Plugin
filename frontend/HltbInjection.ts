@@ -1,4 +1,4 @@
-import { Millennium } from '@steambrew/client';
+import { Millennium, sleep } from '@steambrew/client';
 import { getHltbData } from './HtlbData';
 
 declare const SteamUIStore: any;
@@ -19,7 +19,7 @@ function toHrs(minutes: number | null): string {
     return minutes !== null ? `${(minutes / 60).toFixed(1)} hrs` : '--';
 }
 
-let mainDocument: Document;
+let mainDocument: Document = null;
 
 async function findElement(selector: string): Promise<Element | null> {
     try {
@@ -119,8 +119,11 @@ async function addHltbData() {
     }
 }
 
-export function initHltbInjection() {
-    mainDocument = SteamUIStore.WindowStore.SteamUIWindows[0].m_BrowserWindow.document;
+export async function initHltbInjection() {
+    while (mainDocument === null) {
+        mainDocument = SteamUIStore?.WindowStore?.SteamUIWindows?.[0]?.m_BrowserWindow?.document;
+        await sleep(500);
+    }
 
-    addHltbData();
+    await addHltbData();
 }
