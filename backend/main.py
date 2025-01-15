@@ -18,7 +18,6 @@ def BackendFetch(url: str) -> str:
     response = requests.get(url)
 
     result = {
-        'ok': 200 <= response.status_code < 300,
         'status': response.status_code,
         'url': url,
         'headers': dict(response.headers),
@@ -34,6 +33,20 @@ def GetSteamId():
     if STEAM_ID is None:
         STEAM_ID = Millennium.call_frontend_method('getSteamId')
     return STEAM_ID
+
+RETRIEVE_URL_RESPONSE = None
+
+def GetRetrieveUrlResponse():
+    global RETRIEVE_URL_RESPONSE
+    value = RETRIEVE_URL_RESPONSE
+    RETRIEVE_URL_RESPONSE = None
+
+    return value
+
+def SetRetrieveUrlResponse(response: str):
+    global RETRIEVE_URL_RESPONSE
+
+    RETRIEVE_URL_RESPONSE = response
 
 class Plugin:
     def copy_frontend_files(self):

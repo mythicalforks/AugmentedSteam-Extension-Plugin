@@ -1,5 +1,5 @@
 import { callable } from '@steambrew/webkit';
-import { getCdn, getLoopbackCdn, Logger, VERSION } from './shared';
+import { getCdn, getLoopbackCdn, Logger, sleep, VERSION } from './shared';
 
 // In this file we emulate the extension browser api for the Augmented Steam extension
 
@@ -145,26 +145,95 @@ const interceptedUrls: RegExp[] = [
 const backendFetch = callable<[{ url: string }], string>('BackendFetch');
 
 type BackendResponse = {
-    ok: boolean,
     status: number,
     url: string,
     headers: Record<string, string>,
     body: string
 };
 
+export const retrieveUrlQuery = 'retrieveUrl';
+
+const getRetrieveUrlResponse = callable('GetRetrieveUrlResponse');
+let requestLocked = false;
+
+async function waitLock(): Promise<boolean> {
+    const startTime = Date.now();
+    while (requestLocked && Date.now() - startTime < 15000) {
+        await sleep(250);
+    }
+    return !requestLocked;
+}
+
+async function WindowFetch(url: string): Promise<string | null> {
+    const lockFreed = await waitLock();
+    if (!lockFreed) {
+        Logger.Warn('Failed to retrieve url. Request already in progress.', url);
+        return null;
+    }
+
+    requestLocked = true;
+    const communityWindow = window.open(`https://steamcommunity.com/?${retrieveUrlQuery}=${url}`, undefined, 'width=0,height=1000000,left=0,top=0'); // We set height really high so for some reason the width becomes 0
+    if (!communityWindow) {
+        Logger.Error('Failed to open new window for window request.', url);
+        return null;
+    }
+
+    let urlResponse = null;
+    const startTime = Date.now();
+    while (urlResponse === null && Date.now() - startTime < 10000) {
+        urlResponse = await getRetrieveUrlResponse();
+        if (urlResponse === 0) {
+            urlResponse = null;
+        }
+
+        await sleep(250);
+    }
+
+    if (urlResponse === null) {
+        Logger.Error('Failed to retrieve url. Request timed out after 10 seconds.', url);
+        return null;
+    }
+
+    return urlResponse as string;
+}
+
+async function handleInterceptedFetch(url: string, params?: RequestInit): Promise<Response> {
+    Logger.Debug(`intercepting ${url}`);
+    if (params) {
+        const headers = Object.keys(params).filter(h => h.toLowerCase() !== 'credentials');
+        // We only support the credentials header for now, so if we see any other log a warning
+        if (headers.length > 0) {
+            Logger.Warn('fetch params not fully supported', params);
+        }
+    }
+
+    const response = JSON.parse(await backendFetch({url: url.toString()})) as BackendResponse;
+
+    let responseObject = new Response(response.body, {status: response.status, headers: response.headers});
+    if (response.status === 403 && params?.credentials === 'include') {
+        // If we need credentials to access this page, and we can't do it via the backend we do it via the browser
+        let windowResponse = null;
+        try {
+            windowResponse = await WindowFetch(url.toString());
+        } catch (e) {
+            Logger.Error('Failed to retrieve URL', url.toString(), e);
+        }
+        requestLocked = false;
+        if (windowResponse === null) {
+            return new Response(null, {status: 500});
+        }
+
+        responseObject = new Response(windowResponse, {status: 200});
+    }
+
+    Object.defineProperty(responseObject, 'url', {value: response.url});
+    return responseObject;
+}
+
 window.fetch = async (url: string | URL | Request, params?: RequestInit): Promise<Response> => {
     for (const intercept of interceptedUrls) {
         if (url.toString().match(intercept)) {
-            Logger.Debug(`intercepting ${url}`);
-            if (params) {
-                //TODO: Handle credentials params
-                Logger.Warn('fetch params not supported', params);
-            }
-            const response = JSON.parse(await backendFetch({url: url.toString()})) as BackendResponse;
-
-            const responseObject = new Response(response.body, {status: response.status, headers: response.headers});
-            Object.defineProperty(responseObject, 'url', {value: response.url});
-            return responseObject;
+            return await handleInterceptedFetch(url.toString(), params);
         }
     }
 
@@ -279,10 +348,10 @@ function observeAnchorTag(tag: HTMLAnchorElement): void {
 }
 
 document.createElement = function (tagName: string, options?: ElementCreationOptions) {
-    const tag: HTMLAnchorElement = oldCreateElement(tagName, options);
+    const tag: HTMLElement = oldCreateElement(tagName, options);
 
     if (tagName.toLowerCase() === 'a') {
-        observeAnchorTag(tag);
+        observeAnchorTag(tag as HTMLAnchorElement);
     }
 
     return tag;

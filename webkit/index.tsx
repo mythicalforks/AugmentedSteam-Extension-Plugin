@@ -1,10 +1,11 @@
 import './browser';
 // import { getLang } from './browser';
 import { getNeededScripts } from './script-loading';
-import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN } from './shared';
+import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN, sleep } from './shared';
 import { createFakeSteamHeader } from './header';
-import { Millennium } from '@steambrew/webkit';
+import { callable, Millennium } from '@steambrew/webkit';
 import { injectPreferences } from './preferences';
+import { retrieveUrlQuery } from './browser';
 
 async function loadScript(src: string) {
     let content = await fetch(src).then(response => response.text());
@@ -89,6 +90,36 @@ function reset() {
     localStorage.removeItem('counter');
 }
 
+const setRetrieveUrlResponse = callable<[{ response: string }], void>('SetRetrieveUrlResponse');
+
+async function retrieveUrl() {
+    const queryParams = new URLSearchParams(window.location.search);
+    const retrieveUrl = queryParams.get(retrieveUrlQuery);
+    if (retrieveUrl === null) {
+        return;
+    }
+
+    const wnd = window.open(retrieveUrl, undefined, 'width=0,height=1000000,left=0,top=0'); // We set height really high so for some reason the width becomes 0
+    if (!wnd) {
+        Logger.Error('failed to open new window');
+        return;
+    }
+
+    let isLoaded = false;
+    const startTime = Date.now();
+    while (!isLoaded && Date.now() - startTime < 5000) {
+        isLoaded = wnd.document.readyState === 'complete' && wnd.document.body.innerText !== '';
+
+        await sleep(100);
+    }
+
+    const body = wnd.document.body.innerText;
+    wnd.close();
+    window.close();
+
+    await setRetrieveUrlResponse({response: body});
+}
+
 export default async function WebkitMain() {
     const href = window.location.href;
 
@@ -98,6 +129,11 @@ export default async function WebkitMain() {
         setTimeout(() => {
             window.location.reload();
         }, 500);
+    }
+
+    if (href.includes(`${retrieveUrlQuery}=`)) {
+        retrieveUrl();
+        return;
     }
 
 

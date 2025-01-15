@@ -58,3 +58,7 @@ export const Logger = {
         console.warn('%c AugmentedSteam plugin ', 'background: orange; color: white', ...message);
     },
 };
+
+export function sleep(ms: number) {
+    return new Promise((res) => setTimeout(res, ms));
+}
