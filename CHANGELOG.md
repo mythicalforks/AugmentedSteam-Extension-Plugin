@@ -1,3 +1,13 @@
+## [1.1.2](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.1...v1.1.2) (2025-01-23)
+
+
+### Bug Fixes
+
+* **#3,#7:** Do special fetch to get inventory or other pages that need credentials to get rid of not logged in banner, closes [#3](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/issues/3), [#7](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/issues/7) ([b00b9c7](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/b00b9c7ea64902827956c250681fb91b9e66da4f))
+* **#6:** wait on main main window to be loaded ([2e18b5b](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/2e18b5be6ed1ec61671a0d47d4161743a97050c1)), closes [#6](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/issues/6)
+* build sometimes not working ([142ae3b](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/142ae3ba73a41c39c2cfc1882efcb96dc2e1ad83))
+* css not properly loading in on preferences page in prod mode ([0cd2902](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/0cd2902f1de31b9a01c9b2a8a9e214001e276e47))
+
 ## [1.1.1](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.0...v1.1.1) (2025-01-03)
 
 
