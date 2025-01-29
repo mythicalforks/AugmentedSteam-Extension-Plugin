@@ -120,7 +120,7 @@ async function addHltbData() {
 }
 
 export async function initHltbInjection() {
-    while (mainDocument === null) {
+    while (!mainDocument) {
         mainDocument = SteamUIStore?.WindowStore?.SteamUIWindows?.[0]?.m_BrowserWindow?.document;
         await sleep(500);
     }
