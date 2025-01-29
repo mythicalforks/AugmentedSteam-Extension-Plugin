@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.2...v1.1.3) (2025-01-29)
+
+
+### Bug Fixes
+
+* **#6:** Do better wait on mainDocument ([cab3883](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/cab3883a4b45f0610e21fc204723609a2d88bf12)), closes [#6](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/issues/6)
+
 ## [1.1.2](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.1...v1.1.2) (2025-01-23)
 
 
