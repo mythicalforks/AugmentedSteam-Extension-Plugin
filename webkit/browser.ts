@@ -18,9 +18,10 @@ augmentedBrowser.runtime = {
         addListener: () => {},
     },
     getURL: (resource: string) => {
-        if (resource.endsWith('.png') || resource.endsWith('.svg')) {
+        if (resource.endsWith('.png') || resource.endsWith('.svg') || resource.endsWith('.gif') || resource.startsWith('/localization/')) {
             return getLoopbackCdn(resource);
         }
+        console.log(resource);
         return getCdn(resource);
     },
 };

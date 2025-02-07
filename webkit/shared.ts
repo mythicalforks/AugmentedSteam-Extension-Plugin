@@ -2,7 +2,8 @@ import { callable } from '@steambrew/webkit';
 
 export const VERSION = '4.2.1';
 export let CDN: string;
-export let LOOPBACK_CDN: string = 'https://steamloopback.host/AugmentedSteam';
+const COMMIT_SHA = 'a9272e40f9a561cd756304f90b07858b6b2607ed';
+export let LOOPBACK_CDN = `https://cdn.jsdelivr.net/gh/IsThereAnyDeal/AugmentedSteam@${COMMIT_SHA}/src`;
 export const DEV = false;
 
 export function getCdn(path: string) {

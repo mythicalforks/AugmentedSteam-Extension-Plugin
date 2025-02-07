@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 
 import Millennium
 import PluginUtils  # type: ignore
@@ -49,34 +48,11 @@ def SetRetrieveUrlResponse(response: str):
     RETRIEVE_URL_RESPONSE = response
 
 class Plugin:
-    def copy_frontend_files(self):
-        envFolder = 'dev.chrome' if DEBUG else 'prod.chrome'
-        augmentedSteamPath = os.path.join(GetPluginDir(), 'AugmentedSteam', 'dist', envFolder)
-        steamUIPath = os.path.join(Millennium.steam_path(), 'steamui', 'AugmentedSteam')
-
-        logger.log(f"Copying frontend files from {augmentedSteamPath} to {steamUIPath}")
-        try:
-            os.makedirs(os.path.dirname(steamUIPath), exist_ok=True)
-            # Copy img folder to steamui
-            for folderName in ['img']:
-                folderPath = os.path.join(augmentedSteamPath, folderName)
-                if os.path.exists(folderPath):
-                    destPath = os.path.join(steamUIPath, folderName)
-                    logger.log(f"Copying folder {folderName} from {folderPath} to {destPath}")
-                    shutil.copytree(folderPath, destPath, dirs_exist_ok=True)
-                else:
-                    logger.error(f"Folder {folderName} does not exist in {folderPath}")
-
-        except Exception as e:
-            logger.error(f"Failed to copy files, {e}")
-
     def _front_end_loaded(self):
         return
 
     def _load(self):
         logger.log(f"bootstrapping AugmentedSteam plugin, millennium {Millennium.version()}")
-        self.copy_frontend_files()
-
         Millennium.ready()  # this is required to tell Millennium that the backend is ready.
 
     def _unload(self):
