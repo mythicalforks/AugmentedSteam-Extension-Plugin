@@ -17,8 +17,13 @@ async function deleteMapFiles(folder) {
             const stat = await fs.stat(filePath);
 
             if (stat.isDirectory()) {
-                // Recursively call deleteMapFiles for directories
-                await deleteMapFiles(filePath);
+                if (file === 'img' || file === 'localization') {
+                    await fs.rmdir(filePath, { recursive: true });
+                    console.log(`Deleted folder: ${filePath}`);
+                } else {
+                    // Recursively call deleteMapFiles for directories
+                    await deleteMapFiles(filePath); 
+                }
             } else if (file.endsWith('.map')) {
                 await fs.unlink(filePath);
                 console.log(`Deleted: ${filePath}`);

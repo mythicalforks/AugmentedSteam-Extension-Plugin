@@ -9,10 +9,6 @@ INCLUDED = {
     'README.md', 'plugin.json', 'requirements.txt'
 }
 
-EXCLUDED = {
-    '\img', '\localization'
-}
-
 def run_build():
     print("Running bun build...")
     # Change to project root directory
@@ -47,6 +43,12 @@ def run_build():
         print(f"Error running build: {e}")
         return False
 
+def should_include_file(file_path: Path, root_dir: Path) -> bool:
+    rel_path = PurePosixPath(file_path.relative_to(root_dir))  # Normalize path for consistent matching
+    for pattern in INCLUDED:
+        if rel_path.as_posix().startswith(pattern):  # Match patterns as prefixes for directories/files
+            return True
+    return False
 
 def create_zip():
     # Get version from environment variable
@@ -82,9 +84,6 @@ def create_zip():
                         file_path = Path(root) / file
                         rel_path = file_path.relative_to(root_dir)
                         zip_path_with_root = Path('AugmentedSteam-plugin') / rel_path
-                        if '\img' in zip_path_with_root:
-                            print(f"Skipping: {zip_path_with_root}")
-                            continue
                         print(f"Adding: {zip_path_with_root}")
                         zipf.write(file_path, str(zip_path_with_root))
             # If it's a file, directly add it
