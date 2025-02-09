@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.3...v1.1.4) (2025-02-07)
+
+
+### Performance Improvements
+
+* exclude img and localization from build to make the build smaller ([f923520](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/f923520d498d454601bc9b2ea54dcbe90688bb00))
+
 ## [1.1.3](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.2...v1.1.3) (2025-01-29)
 
 
