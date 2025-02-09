@@ -6,8 +6,8 @@ This plugin ports the functionality of the [Augmented Steam Browser Extension](h
 > Pretty much all the Augmented Steam extension's features are included in this plugin.
 
 See the [AugmentedSteam Browser Extension](https://github.com/IsThereAnyDeal/AugmentedSteam) for more details about
-each feature or the [extension page](https://augmentedsteam.com/).  
-Also some features from the extension ported to the library see
+each feature or the [extension page](https://augmentedsteam.com/) for more images.  
+Also some features from the extension are ported to the library see
 [Library extra details](#extra-library-details)
 
 ## Installation
@@ -53,7 +53,7 @@ browser extension.
 ### Extra library details
 
 After clicking on the (i) in the library you will now also see the HowLongToBeat times and player count in the game
-details
+details. These are cached for 1 hour.
 ![Library extra details](Images/library_details.png)
 
 #### Options page
@@ -63,6 +63,21 @@ details
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Steps on how to set up the project
+
+> It is recommended to put the plugin repository in your Steam plugins folder or make some symbolic links to the
+> repository for easier development.
+
+1. Clone the repository using `git clone https://github.com/tddebart/AugmentedSteam-Extension-Plugin.git`
+2. Pull the AugmentedSteam submodule using `git submodule update --init`
+3. Run `bun install` or use your favorite package manager
+4. Run `bun build-augmented-steam` to build the AugmentedSteam submodule
+5. Now you can run `bun watch` or `bun dev` to build the plugin and watch for changes
+
+> Note: `bun dev` will only watch for changes in the webkit and frontend folder and just require a `F5` in the steam
+> client to reload.
+> For changes to the backend, you will need to fully restart the Steam client.
 
 ## Credits
 
