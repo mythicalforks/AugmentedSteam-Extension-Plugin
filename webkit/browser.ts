@@ -18,6 +18,14 @@ augmentedBrowser.runtime = {
         addListener: () => {},
     },
     getURL: (resource: string) => {
+        // Disable early access badge on achievements page because of incompatibility with SteamDB plugin
+        if (location.href.includes('/stats') && resource.includes('early_access')) {
+            const gameLogo = document.querySelector('.gameLogo');
+            if (gameLogo) {
+                gameLogo.classList.add('es_ea_checked');
+            }
+        }
+
         if (resource.endsWith('.png') || resource.endsWith('.svg') || resource.endsWith('.gif') || resource.startsWith('/localization/')) {
             return getLoopbackCdn(resource);
         }
