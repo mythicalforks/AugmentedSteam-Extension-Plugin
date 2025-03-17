@@ -1,5 +1,6 @@
 {
   "branches": ["main"],
+  "preset": "angular",
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
@@ -13,7 +14,18 @@
     {
       "path": "@semantic-release/github",
       "assets": ["build/*.zip"],
-      "draftRelease": true,
+      "draftRelease": true
     }
-  ]
+  ],
+  "releaseRules": [
+    { "type": "refactor", "release": "patch" }
+  ],
+  "presetConfig": {
+    "types": [
+      { "type": "feat", "section": "✨ Features" },
+      { "type": "fix", "section": "🐛 Bug Fixes" },
+      { "type": "refactor", "section": "♻️ Code Refactoring" },
+      { "type": "perf", "section": "🚀 Performance Improvements" }
+    ]
+  }
 }
