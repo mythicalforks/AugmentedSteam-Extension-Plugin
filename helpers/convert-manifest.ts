@@ -1,80 +1,81 @@
-import * as fs from 'fs';
-import escapeStringRegexp from 'escape-string-regexp';
+/* eslint-disable @typescript-eslint/no-loop-func */
 import clipboard from 'clipboardy';
+import escapeStringRegexp from 'escape-string-regexp';
+import * as fs from 'fs';
 
 interface ContentScript {
-    matches: string[];
-    exclude_matches?: string[];
-    js?: string[];
-    css?: string[];
+  matches: string[];
+  exclude_matches?: string[];
+  js?: string[];
+  css?: string[];
 }
 
 interface ManifestData {
-    content_scripts: ContentScript[];
+  content_scripts: ContentScript[];
 }
 
 function urlToRegex(url: string): string {
-    return `^${escapeStringRegexp(url).replace(/\\\*/g, '.*').replace(/\//g, '\\/')}$`;
+  return `^${escapeStringRegexp(url).replace(/\\\*/g, '.*').replace(/\//g, '\\/')}$`;
 }
 
 function convertToJs(): void {
-    fs.readFile('AugmentedSteam/dist/prod.chrome/manifest.json', 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading the manifest file:', err);
-            return;
-        }
+  fs.readFile('AugmentedSteam/dist/prod.chrome/manifest.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the manifest file:', err);
 
-        const manifestData: ManifestData = JSON.parse(data);
-        const contentScripts = manifestData.content_scripts;
-        const combinedMatches: { [key: string]: { js: string[]; css: string[] } } = {};
+      return;
+    }
 
-        let output = '';
+    const manifestData = JSON.parse(data) as ManifestData;
+    const contentScripts = manifestData.content_scripts;
+    const combinedMatches: Record<string, { js: string[]; css: string[]; }> = {};
 
-        for (const script of contentScripts) {
-            const matches = script.matches;
-            const excludes = script.exclude_matches;
-            const jsFiles = script.js || [];
-            const cssFiles = script.css || [];
+    let output = '';
 
-            let combinedMatchesStr = matches.map(m => `href.match(/${urlToRegex(m)}/)`).join(' || ');
-            combinedMatchesStr = `(${combinedMatchesStr})`;
-            // Add the exclude_matches to the combinedMatchesStr
-            if (script.exclude_matches) {
-                combinedMatchesStr += ` && !(${excludes.map(m => `href.match(/${urlToRegex(m)}/)`).join(' || ')})`;
-            }
-            if (!combinedMatches[combinedMatchesStr]) {
-                combinedMatches[combinedMatchesStr] = {js: [], css: []};
-            }
-            combinedMatches[combinedMatchesStr].js.push(...jsFiles);
-            combinedMatches[combinedMatchesStr].css.push(...cssFiles);
-        }
+    for (const script of contentScripts) {
+      const matches = script.matches;
+      const excludes = script.exclude_matches;
+      const jsFiles = script.js ?? [];
+      const cssFiles = script.css ?? [];
 
-        for (const match in combinedMatches) {
-            const files = combinedMatches[match];
-            const uniqueJsFiles = Array.from(new Set(files.js));
-            const uniqueCssFiles = Array.from(new Set(files.css));
+      let combinedMatchesStr = matches.map(m => `href.match(/${urlToRegex(m)}/)`).join(' || ');
+      combinedMatchesStr = `(${combinedMatchesStr})`;
+      // Add the exclude_matches to the combinedMatchesStr
+      if (excludes) {
+        combinedMatchesStr += ` && !(${excludes.map(m => `href.match(/${urlToRegex(m)}/)`).join(' || ')})`;
+      }
+      if (!combinedMatches[combinedMatchesStr]) {
+        combinedMatches[combinedMatchesStr] = { js: [], css: [] };
+      }
+      combinedMatches[combinedMatchesStr]?.js.push(...jsFiles);
+      combinedMatches[combinedMatchesStr]?.css.push(...cssFiles);
+    }
 
-            if (uniqueJsFiles.length === 0 && uniqueCssFiles.length === 0) {
-                continue;
-            }
+    for (const [match, { js, css }] of Object.entries(combinedMatches)) {
+      const uniqueJsFiles = Array.from(new Set(js));
+      const uniqueCssFiles = Array.from(new Set(css));
 
-            output += `if (${match}) {\n`;
-            uniqueJsFiles.forEach(jsFile => {
-                output += `    scripts.push('${jsFile}');\n`;
-            });
-            uniqueCssFiles.forEach(cssFile => {
-                output += `    scripts.push('${cssFile}');\n`;
-            });
-            output += '}\n\n';
-        }
+      if (uniqueJsFiles.length === 0 && uniqueCssFiles.length === 0) {
+        continue;
+      }
 
-        output = output.trimEnd();
+      output += `if (${match}) {\n`;
+      uniqueJsFiles.forEach((jsFile) => {
+        output += `    scripts.push('${jsFile}');\n`;
+      });
+      uniqueCssFiles.forEach((cssFile) => {
+        output += `    scripts.push('${cssFile}');\n`;
+      });
+      output += '}\n\n';
+    }
 
-        // Copy text to clipboard
-        clipboard.writeSync(output);
+    output = output.trimEnd();
 
-        console.log('Copied to clipboard.');
-    });
+    // Copy text to clipboard
+    clipboard.writeSync(output);
+
+    console.log('Copied to clipboard.');
+  });
 }
 
 convertToJs();

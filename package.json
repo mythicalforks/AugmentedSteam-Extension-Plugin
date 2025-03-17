@@ -2,7 +2,7 @@
   "scripts": {
     "dev": "millennium-ttc --build dev",
     "watch": "nodemon --watch webkit --watch frontend --ext ts,tsx,js,jsx --exec \"millennium-ttc --build dev\"",
-    "update-augmented-steam": "git submodule update --remote AugmentedSteam && echo \u001b[31mSubmodules updated. Remember to update the sha in webkit\\shared.ts\u001b[0m",
+    "update-augmented-steam": "git submodule update --remote AugmentedSteam && echo Submodules updated. Remember to update the sha in webkit\\shared.ts",
     "build-augmented-steam-dev": "cd ./AugmentedSteam && npm install --include=dev && npm run build -- chrome",
     "build-augmented-steam": "cd ./AugmentedSteam && npm install --include=dev && npm run build -- chrome --production",
     "build": "npm run build-augmented-steam && node ./helpers/clean-maps.mjs && millennium-ttc --build prod"
@@ -12,6 +12,8 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.1",
+    "@stylistic/eslint-plugin": "^4.2.0",
+    "@types/node": "^22.13.10",
     "clipboardy": "^4.0.0",
     "escape-string-regexp": "^5.0.0",
     "eslint": "^9.22.0",

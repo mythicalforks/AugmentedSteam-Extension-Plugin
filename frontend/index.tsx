@@ -1,24 +1,30 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// TODO: use steam-types
 import { Millennium } from '@steambrew/client';
 import { initHltbInjection } from './HltbInjection';
 
-//#region Steamid
-let steamID = -1;
+// #region Steamid
+let steamID = '-1';
 
-async function getSteamId() {
-    const loginUsers = await SteamClient.User.GetLoginUsers();
+async function getSteamId(): Promise<string> {
+  const loginUsers = await SteamClient.User.GetLoginUsers();
 
-    return loginUsers[0].avatarUrl.match(/avatarcache\/(\d+)/)[1];
+  return loginUsers[0].avatarUrl.match(/avatarcache\/(\d+)/)[1];
 }
 
-// @ts-expect-error Millennium.exposeObj is null in webkit
-Millennium.exposeObj({
+if (Millennium.exposeObj) {
+  Millennium.exposeObj({
     getSteamId: () => steamID,
-});
-//#endregion
+  });
+}
+// #endregion
 
 // Entry point on the front end of your plugin
-export default async function PluginMain() {
-    steamID = await getSteamId();
+export default async function PluginMain(): Promise<void> {
+  steamID = await getSteamId();
 
-    initHltbInjection();
+  initHltbInjection();
 }

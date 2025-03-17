@@ -1,6 +1,4 @@
-export interface MessageCallback {
-  (message: unknown, sender: unknown, sendResponse: (response?: unknown) => void): void | boolean | Promise<unknown>;
-}
+export type MessageCallback = (message: unknown, sender: unknown, sendResponse: (response?: unknown) => void) => void | boolean | Promise<unknown>;
 
 declare global {
   interface Window {
@@ -8,32 +6,33 @@ declare global {
   }
 }
 
-type storageGet = (items?: string | string[] | Record<string, unknown>, callback?: Function) => Promise<Record<string, unknown>>;
+type storageGet = (items?: string | string[] | Record<string, unknown>, callback?: (result: Record<string, unknown>) => void) => Promise<Record<string, unknown>>;
 
-type storageSet = (item: Record<string, unknown>, callback?: Function) => Promise<void>;
+type storageSet = (item: Record<string, unknown>, callback?: () => void) => Promise<void>;
 
-type storageRemove = (key: string | string[], callback?: Function) => Promise<void>;
+type storageRemove = (key: string | string[], callback?: () => void) => Promise<void>;
 
 export interface AugmentedBrowser {
   runtime: {
-    getManifest: () => { version: string };
+    getManifest(): { version: string; };
+    getURL(resource: string): string;
+    sendMessage(message: unknown, callback?: (response: unknown) => void): void;
+
     id: string;
     onInstalled: {
-      addListener: (callback: () => void) => void;
+      addListener(callback: () => void): void;
     };
     onStartup: {
-      addListener: (callback: () => void) => void;
+      addListener(callback: () => void): void;
     };
-    getURL: (resource: string) => string;
     onMessage: {
-      addListener: (callback: MessageCallback) => void;
+      addListener(callback: MessageCallback): void;
     };
-    sendMessage: (message: unknown, callback?: (response: unknown) => void) => void;
   };
   contextMenus: {
     onClicked: {
-      addListener: () => void;
-      hasListener: () => boolean;
+      addListener(): void;
+      hasListener(): boolean;
     };
   };
   storage: {
@@ -49,9 +48,9 @@ export interface AugmentedBrowser {
     };
   };
   clients: {
-    matchAll: () => unknown;
+    matchAll(): { url: string; }[];
   };
   offscreen: {
-    closeDocument: () => unknown;
+    closeDocument(): void;
   };
 }

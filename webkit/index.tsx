@@ -1,174 +1,189 @@
-import './browser';
-// import { getLang } from './browser';
+//* eslint-disable no-duplicate-imports */
 import { callable, Millennium } from '@steambrew/webkit';
+import './browser';
 import { retrieveUrlQuery } from './browser';
 import { createFakeSteamHeader } from './header';
 import { injectPreferences } from './preferences';
 import { getNeededScripts } from './script-loading';
 import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN, sleep } from './shared';
 
-async function loadScript(src: string) {
-    let content = await fetch(src).then(response => response.text());
-    content = content
-        .replaceAll('chrome', 'augmentedBrowser')
-        .replaceAll('clients', 'augmentedBrowser.clients');
-    content += '\n//# sourceURL=' + src;
+async function loadScript(src: string): Promise<void> {
+  let content = await fetch(src).then(async response => response.text());
+  content = content
+    .replaceAll('chrome', 'augmentedBrowser')
+    .replaceAll('clients', 'augmentedBrowser.clients');
+  content += `\n//# sourceURL=${src}`;
 
-    return new Promise<void>((resolve, reject) => {
-        const script = document.createElement('script');
-        // script.src = src;
-        script.type = 'text/javascript';
-        script.async = true;
-        script.innerHTML = content;
-        script.setAttribute('original-src', src);
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script');
+    // script.src = src;
+    script.type = 'text/javascript';
+    script.async = true;
+    script.innerHTML = content;
+    script.setAttribute('original-src', src);
 
-        script.onload = () => resolve();
+    script.onload = (): void => {
+      resolve();
+    };
 
-        script.onerror = () => reject(new Error('Failed to load script'));
+    script.onerror = (): void => {
+      reject(new Error('Failed to load script'));
+    };
 
-        document.head.appendChild(script);
-        resolve();
-    });
+    document.head.appendChild(script);
+    resolve();
+  });
 }
 
-async function loadStyle(src: string) {
-    let content = await fetch(src).then(response => response.text());
-    content = content.replaceAll('chrome-extension://__MSG_@@extension_id__', LOOPBACK_CDN);
+async function loadStyle(src: string): Promise<void> {
+  let content = await fetch(src).then(async response => response.text());
+  content = content.replaceAll('chrome-extension://__MSG_@@extension_id__', LOOPBACK_CDN);
 
-    return new Promise<void>((resolve, reject) => {
-        const style = document.createElement('style');
-        style.setAttribute('original-src', src);
-        style.innerHTML = content;
+  return new Promise<void>((resolve, reject) => {
+    const style = document.createElement('style');
+    style.setAttribute('original-src', src);
+    style.innerHTML = content;
 
-        style.onload = () => resolve();
+    style.onload = (): void => {
+      resolve();
+    };
 
-        style.onerror = () => reject(new Error('Failed to load style'));
+    style.onerror = (): void => {
+      reject(new Error('Failed to load style'));
+    };
 
-        document.head.appendChild(style);
-    });
+    document.head.appendChild(style);
+  });
 }
 
-async function loadJsScripts(scripts: string[]) {
-    const promises = [];
-    for (const script of scripts.filter(script => script.includes('.js'))) {
-        promises.push(loadScript(getCdn(script)));
-    }
+async function loadJsScripts(scripts: string[]): Promise<void[]> {
+  const promises = [];
+  const filteredScripts = scripts.filter(script => script.includes('.js'));
 
-    return Promise.all(promises);
+  for (const script of filteredScripts) {
+    promises.push(loadScript(getCdn(script)));
+  }
+
+  return Promise.all(promises);
 }
 
-function loadCssScripts(scripts: string[]) {
-    const promises = [];
-    for (const style of scripts.filter(script => script.includes('.css'))) {
-        promises.push(loadStyle(getCdn(style)));
-    }
+async function loadCssScripts(scripts: string[]): Promise<void[]> {
+  const promises = [];
+  const filteredStyles = scripts.filter(script => script.includes('.css'));
 
-    return Promise.all(promises);
+  for (const style of filteredStyles) {
+    promises.push(loadStyle(getCdn(style)));
+  }
+
+  return Promise.all(promises);
 }
 
 const startTime = performance.now();
 
-async function testPerformance() {
-    await Millennium.findElement(document, '.es_highlighted_owned');
+async function testPerformance(): Promise<void> {
+  await Millennium.findElement(document, '.es_highlighted_owned');
 
-    Logger.Log(`Took Augmented Steam ${performance.now() - startTime}ms to load`);
+  Logger.log(`Took Augmented Steam ${performance.now() - startTime}ms to load`);
 
-    if (DEV) {
-        // @ts-expect-error dev property
-        window.reset = reset;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (DEV) {
+    // @ts-expect-error dev property
+    window.reset = reset;
 
-        const prevTime = localStorage.getItem('time') ?? 0;
-        localStorage.setItem('time', (performance.now() - startTime + Number(prevTime)).toString());
-        const prevCounter = localStorage.getItem('counter') ?? 0;
-        localStorage.setItem('counter', (Number(prevCounter) + 1).toString());
-        Logger.Log(`Avg: ${Number(localStorage.getItem('time')) / Number(localStorage.getItem('counter'))}`);
-    }
+    const prevTime = localStorage.getItem('time') ?? 0;
+    localStorage.setItem('time', (performance.now() - startTime + Number(prevTime)).toString());
+    const prevCounter = localStorage.getItem('counter') ?? 0;
+    localStorage.setItem('counter', (Number(prevCounter) + 1).toString());
+    Logger.log(`Avg: ${Number(localStorage.getItem('time')) / Number(localStorage.getItem('counter'))}`);
+  }
 }
 
-function reset() {
-    localStorage.removeItem('time');
-    localStorage.removeItem('counter');
+function reset(): void {
+  localStorage.removeItem('time');
+  localStorage.removeItem('counter');
 }
 
-const setRetrieveUrlResponse = callable<[{ response: string }], void>('SetRetrieveUrlResponse');
+const setRetrieveUrlResponse = callable<[{ response: string; }], void>('SetRetrieveUrlResponse');
 
-async function retrieveUrl() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const retrieveUrl = queryParams.get(retrieveUrlQuery);
-    if (retrieveUrl === null) {
-        return;
-    }
+async function retrieveUrl(): Promise<void> {
+  const queryParams = new URLSearchParams(window.location.search);
+  const url = queryParams.get(retrieveUrlQuery);
+  if (url === null) {
+    return;
+  }
 
-    const wnd = window.open(retrieveUrl, undefined, 'width=0,height=1000000,left=0,top=0'); // We set height really high so for some reason the width becomes 0
-    if (!wnd) {
-        Logger.Error('failed to open new window');
-        return;
-    }
+  const wnd = window.open(url, undefined, 'width=0,height=1000000,left=0,top=0'); // We set height really high so for some reason the width becomes 0
+  if (!wnd) {
+    Logger.error('failed to open new window');
 
-    let isLoaded = false;
-    const startTime = Date.now();
-    while (!isLoaded && Date.now() - startTime < 5000) {
-        isLoaded = wnd.document.readyState === 'complete' && wnd.document.body.innerText !== '';
+    return;
+  }
 
-        await sleep(100);
-    }
+  let isLoaded = false;
+  const timeoutTime = Date.now();
+  while (!isLoaded && Date.now() - timeoutTime < 5000) {
+    isLoaded = wnd.document.readyState === 'complete' && wnd.document.body.innerText !== '';
 
-    const body = wnd.document.body.innerText;
-    wnd.close();
-    window.close();
+    // eslint-disable-next-line no-await-in-loop
+    await sleep(100);
+  }
 
-    await setRetrieveUrlResponse({response: body});
+  const body = wnd.document.body.innerText;
+  wnd.close();
+  window.close();
+
+  await setRetrieveUrlResponse({ response: body });
 }
 
-export default async function WebkitMain() {
-    const href = window.location.href;
+export default async function WebkitMain(): Promise<void> {
+  const href = window.location.href;
 
-    if (href.includes('isthereanydeal.com')) {
-        await Millennium.findElement(document, '.error-message');
-        // Page errored, do a force reload
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
-    }
+  if (href.includes('isthereanydeal.com')) {
+    await Millennium.findElement(document, '.error-message');
+    // Page errored, do a force reload
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }
 
-    if (href.includes(`${retrieveUrlQuery}=`)) {
-        retrieveUrl();
-        return;
-    }
+  if (href.includes(`${retrieveUrlQuery}=`)) {
+    retrieveUrl();
 
+    return;
+  }
 
-    if (!href.includes('https://store.steampowered.com') && !href.includes('https://steamcommunity.com')) {
-        return;
-    }
+  if (!href.includes('https://store.steampowered.com') && !href.includes('https://steamcommunity.com')) {
+    return;
+  }
 
-    testPerformance();
+  testPerformance();
 
-    // Log all await calls
-    // const originalThen = Promise.prototype.then;
+  // Log all await calls
+  // const originalThen = Promise.prototype.then;
 
-    // Promise.prototype.then = function (onFulfilled, onRejected) {
-    //     const stack = new Error().stack;
-    //     console.log("Await called:", stack);
-    //     return originalThen.call(this, onFulfilled, onRejected);
-    // };
+  // Promise.prototype.then = function (onFulfilled, onRejected) {
+  //     const stack = new Error().stack;
+  //     console.log("Await called:", stack);
+  //     return originalThen.call(this, onFulfilled, onRejected);
+  // };
 
-    Logger.Log('plugin is running');
+  Logger.log('plugin is running');
 
-    await createFakeSteamHeader();
+  await createFakeSteamHeader();
 
-    await initCdn();
+  await initCdn();
 
-    const scripts = getNeededScripts();
+  const scripts = getNeededScripts();
 
-    await Promise.all([
-        loadCssScripts(scripts),
-        loadScript(getCdn('js/background.js')),
-        loadScript(getCdn('js/offscreen_domparser.js')),
-    ]);
+  await Promise.all([
+    loadCssScripts(scripts),
+    loadScript(getCdn('js/background.js')),
+    loadScript(getCdn('js/offscreen_domparser.js')),
+  ]);
 
-    await loadJsScripts(scripts);
+  await loadJsScripts(scripts);
 
-    if (window.location.href.includes('https://store.steampowered.com/account')) {
-        injectPreferences();
-    }
+  if (window.location.href.includes('https://store.steampowered.com/account')) {
+    injectPreferences();
+  }
 }
