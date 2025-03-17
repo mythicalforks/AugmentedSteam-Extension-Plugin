@@ -1,3 +1,5 @@
+## [1.1.6](https://github.com/BossSloth/AugmentedSteam-Extension-Plugin/compare/v1.1.5...v1.1.6) (2025-03-17)
+
 ## [1.1.5](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.4...v1.1.5) (2025-02-16)
 
 
