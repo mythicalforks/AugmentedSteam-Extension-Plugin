@@ -10,6 +10,7 @@ async function getSteamId() {
     return loginUsers[0].avatarUrl.match(/avatarcache\/(\d+)/)[1];
 }
 
+// @ts-expect-error Millennium.exposeObj is null in webkit
 Millennium.exposeObj({
     getSteamId: () => steamID,
 });

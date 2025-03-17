@@ -3,7 +3,7 @@ import { callable } from '@steambrew/webkit';
 export const VERSION = '4.2.1';
 export let CDN: string;
 const COMMIT_SHA = 'a9272e40f9a561cd756304f90b07858b6b2607ed';
-export let LOOPBACK_CDN = `https://cdn.jsdelivr.net/gh/IsThereAnyDeal/AugmentedSteam@${COMMIT_SHA}/src`;
+export const LOOPBACK_CDN = `https://cdn.jsdelivr.net/gh/IsThereAnyDeal/AugmentedSteam@${COMMIT_SHA}/src`;
 export const DEV = false;
 
 export function getCdn(path: string) {
@@ -36,26 +36,17 @@ export async function initCdn() {
     CDN = 'https://pseudo.millennium.app' + extensionFolder;
 }
 
-declare global {
-    interface Window {
-        augmentedBrowser: any;
-        /** @deprecated Use `augmentedBrowser` instead when possible. */
-        chrome: any;
-        clients: { matchAll: () => any[] };
-    }
-}
-
 export const Logger = {
-    Error: (...message: any[]) => {
+    Error: (...message: unknown[]) => {
         console.error('%c AugmentedSteam plugin ', 'background: red; color: white', ...message);
     },
-    Log: (...message: any[]) => {
+    Log: (...message: unknown[]) => {
         console.log('%c AugmentedSteam plugin ', 'background: purple; color: white', ...message);
     },
-    Debug: (...message: any[]) => {
+    Debug: (...message: unknown[]) => {
         console.debug('%c AugmentedSteam plugin ', 'background: black; color: white', ...message);
     },
-    Warn: (...message: any[]) => {
+    Warn: (...message: unknown[]) => {
         console.warn('%c AugmentedSteam plugin ', 'background: orange; color: white', ...message);
     },
 };

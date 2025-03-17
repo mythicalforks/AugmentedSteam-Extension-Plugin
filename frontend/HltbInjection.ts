@@ -1,7 +1,8 @@
 import { Millennium, sleep } from '@steambrew/client';
 import { getHltbData } from './HtlbData';
 
-declare const SteamUIStore: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const SteamUIStore: any; // TODO: will type later with steam-types
 
 function createInfoWithUrl(title: string, description: string, url: string) {
     const infoItem = document.createElement('div');
@@ -19,13 +20,13 @@ function toHrs(minutes: number | null): string {
     return minutes !== null ? `${(minutes / 60).toFixed(1)} hrs` : '--';
 }
 
-let mainDocument: Document = null;
+let mainDocument: Document;
 
 async function findElement(selector: string): Promise<Element | null> {
     try {
         const elements = await Millennium.findElement(mainDocument, selector);
-        return elements[0];
-    } catch (_) {
+        return elements[0] ?? null;
+    } catch {
         return null;
     }
 }

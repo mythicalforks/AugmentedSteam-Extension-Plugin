@@ -1,11 +1,11 @@
 import './browser';
 // import { getLang } from './browser';
+import { callable, Millennium } from '@steambrew/webkit';
+import { retrieveUrlQuery } from './browser';
+import { createFakeSteamHeader } from './header';
+import { injectPreferences } from './preferences';
 import { getNeededScripts } from './script-loading';
 import { DEV, getCdn, initCdn, Logger, LOOPBACK_CDN, sleep } from './shared';
-import { createFakeSteamHeader } from './header';
-import { callable, Millennium } from '@steambrew/webkit';
-import { injectPreferences } from './preferences';
-import { retrieveUrlQuery } from './browser';
 
 async function loadScript(src: string) {
     let content = await fetch(src).then(response => response.text());
@@ -74,7 +74,7 @@ async function testPerformance() {
     Logger.Log(`Took Augmented Steam ${performance.now() - startTime}ms to load`);
 
     if (DEV) {
-        //@ts-ignore
+        // @ts-expect-error dev property
         window.reset = reset;
 
         const prevTime = localStorage.getItem('time') ?? 0;

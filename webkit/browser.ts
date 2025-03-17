@@ -1,10 +1,9 @@
 import { callable } from '@steambrew/webkit';
+import { AugmentedBrowser } from './browser-types';
 import { getCdn, getLoopbackCdn, Logger, sleep, VERSION } from './shared';
 
 // In this file we emulate the extension browser api for the Augmented Steam extension
-
-window.augmentedBrowser = {};
-const augmentedBrowser = window.augmentedBrowser;
+const augmentedBrowser: Partial<AugmentedBrowser> = {};
 
 //#region Defaults
 
@@ -29,15 +28,18 @@ augmentedBrowser.runtime = {
         if (resource.endsWith('.png') || resource.endsWith('.svg') || resource.endsWith('.gif') || resource.startsWith('/localization/')) {
             return getLoopbackCdn(resource);
         }
-        console.log(resource);
         return getCdn(resource);
     },
+    onMessage: {
+        addListener
+    },
+    sendMessage
 };
 
 augmentedBrowser.contextMenus = {
     onClicked: {
         addListener: () => {},
-        hasListener: () => {},
+        hasListener: () => false,
     },
 };
 
@@ -48,14 +50,14 @@ augmentedBrowser.contextMenus = {
 const SYNC_STORAGE_KEY = 'augmented-options-sync';
 const LOCAL_STORAGE_KEY = 'augmented-options-local';
 
-async function StorageGet(storageKey: string, items?: string | string[] | Record<string, any>, callback?: Function): Promise<any> {
+async function StorageGet(storageKey: string, items?: string | string[] | Record<string, unknown>, callback?: Function): Promise<Record<string, unknown>> {
     const storedData = localStorage.getItem(storageKey);
-    const result: Record<string, any> = {};
-    let parsedData: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
+    let parsedData: Record<string, unknown> = {};
 
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
-    } catch (e) {
+    } catch {
         throw new Error(`failed to parse JSON for ${storageKey}`);
     }
 
@@ -82,13 +84,13 @@ async function StorageGet(storageKey: string, items?: string | string[] | Record
     return result;
 }
 
-async function StorageSet(storageKey: string, item: Record<string, any>, callback?: Function) {
+async function StorageSet(storageKey: string, item: Record<string, unknown>, callback?: Function) {
     const storedData = localStorage.getItem(storageKey);
-    let parsedData: Record<string, any> = {};
+    let parsedData: Record<string, object> = {};
 
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
-    } catch (e) {
+    } catch {
         throw new Error(`failed to parse JSON for ${storageKey}`);
     }
 
@@ -102,11 +104,11 @@ async function StorageSet(storageKey: string, item: Record<string, any>, callbac
 
 async function StorageRemove(storageKey: string, key: string | string[], callback?: Function) {
     const storedData = localStorage.getItem(storageKey);
-    let parsedData: Record<string, any> = {};
+    let parsedData: Record<string, object> = {};
 
     try {
         parsedData = storedData ? JSON.parse(storedData) : {};
-    } catch (e) {
+    } catch {
         throw new Error(`failed to parse JSON for ${storageKey}`);
     }
 
@@ -127,14 +129,14 @@ async function StorageRemove(storageKey: string, key: string | string[], callbac
 
 augmentedBrowser.storage = {
     sync: {
-        get: (items?: any, callback?: Function) => StorageGet(SYNC_STORAGE_KEY, items, callback),
-        set: (item: any, callback?: Function) => StorageSet(SYNC_STORAGE_KEY, item, callback),
-        remove: (key: any, callback?: Function) => StorageRemove(SYNC_STORAGE_KEY, key, callback),
+        get: (items?: Record<string, unknown>, callback?: Function) => StorageGet(SYNC_STORAGE_KEY, items, callback),
+        set: (item: Record<string, unknown>, callback?: Function) => StorageSet(SYNC_STORAGE_KEY, item, callback),
+        remove: (key: string | string[], callback?: Function) => StorageRemove(SYNC_STORAGE_KEY, key, callback),
     },
     local: {
-        get: (items?: any, callback?: Function) => StorageGet(LOCAL_STORAGE_KEY, items, callback),
-        set: (item: any, callback?: Function) => StorageSet(LOCAL_STORAGE_KEY, item, callback),
-        remove: (key: any, callback?: Function) => StorageRemove(LOCAL_STORAGE_KEY, key, callback),
+        get: (items?: Record<string, unknown>, callback?: Function) => StorageGet(LOCAL_STORAGE_KEY, items, callback),
+        set: (item: Record<string, unknown>, callback?: Function) => StorageSet(LOCAL_STORAGE_KEY, item, callback),
+        remove: (key: string | string[], callback?: Function) => StorageRemove(LOCAL_STORAGE_KEY, key, callback),
     },
 };
 
@@ -258,23 +260,21 @@ augmentedBrowser.offscreen = {
     closeDocument: () => {},
 };
 
-type MessageCallback = (message: any, sender: any, sendResponse: (response: any) => void) => void;
+type MessageCallback = (message: unknown, sender: object, sendResponse: (response: unknown) => void) => void;
 
 const messageListeners: MessageCallback[] = [];
 
-augmentedBrowser.runtime.onMessage = {
-    addListener: (callback: MessageCallback) => {
-        messageListeners.push(callback);
-    },
+function addListener(callback: MessageCallback) {
+    messageListeners.push(callback);
 };
 
-augmentedBrowser.runtime.sendMessage = function (message: any, callback?: (response: any) => void): void {
+function sendMessage(message: unknown, callback?: (response: unknown) => void): void {
     Logger.Debug('Sending message', message);
     messageListeners.forEach((listener) => {
         listener(
             message,
             {tab: {}},
-            (response: any) => {
+            (response: unknown) => {
                 if (callback) {
                     callback(response);
                 }
@@ -366,3 +366,5 @@ document.createElement = function (tagName: string, options?: ElementCreationOpt
     return tag;
 };
 //#endregion
+
+window.augmentedBrowser = augmentedBrowser as AugmentedBrowser;

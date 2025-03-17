@@ -9,7 +9,14 @@ function getIdFromAppConfig(): string | null {
         return null;
     }
 
-    return JSON.parse(appConfig.getAttribute('data-userinfo')).steamid;
+    const userInfo = appConfig.getAttribute('data-userinfo')
+
+    if (userInfo === null) {
+        Logger.Warn('data-userinfo not found on application_config');
+        return null;
+    }
+
+    return JSON.parse(userInfo).steamid;
 }
 
 function getIdFromScript(context: Node): string | null {
@@ -20,7 +27,7 @@ function getIdFromScript(context: Node): string | null {
         return null;
     }
 
-    return script.textContent.match(/g_steamID.+?(\d+)/)[1];
+    return script.textContent?.match(/g_steamID.+?(\d+)/)?.[1] ?? null;
 }
 
 async function getIdFromBackend(): Promise<string | null> {
@@ -29,7 +36,7 @@ async function getIdFromBackend(): Promise<string | null> {
 }
 
 export async function createFakeSteamHeader() {
-    let steamid = getIdFromAppConfig() ?? getIdFromScript(document) ?? await getIdFromBackend();
+    const steamid = getIdFromAppConfig() ?? getIdFromScript(document) ?? await getIdFromBackend();
     if (!steamid) {
         throw new Error('Could not get steamid, augmented steam will not work.');
     }
@@ -40,7 +47,7 @@ export async function createFakeSteamHeader() {
         // Wait on react to load
         const start = performance.now();
         while (performance.now() - start < 5000) {
-            // @ts-ignore
+            // @ts-expect-error any, global react object
             const root = SSR?.reactRoot?._internalRoot;
             if (root) {
                 break;
@@ -55,12 +62,12 @@ export async function createFakeSteamHeader() {
         const node = document.createElement('header');
         node.innerHTML = reactFakeHeader.replaceAll('%user_id%', steamid);
         const pageContent = document.querySelector('#StoreTemplate');
-        pageContent.prepend(node);
+        pageContent?.prepend(node);
     } else {
         const node = document.createElement('div');
         node.innerHTML = legacyFakeHeader.replaceAll('%user_id%', steamid);
         const pageContent = document.querySelector('.responsive_page_content') ?? document.querySelector('.headerOverride');
-        pageContent.prepend(node);
+        pageContent?.prepend(node);
     }
 }
 

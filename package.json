@@ -8,13 +8,17 @@
     "build": "npm run build-augmented-steam && node ./helpers/clean-maps.mjs && millennium-ttc --build prod"
   },
   "devDependencies": {
+    "@eslint/js": "^9.22.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.1",
     "clipboardy": "^4.0.0",
     "escape-string-regexp": "^5.0.0",
+    "eslint": "^9.22.0",
+    "globals": "^16.0.0",
     "nodemon": "^3.1.9",
-    "semantic-release": "^24.2.3"
+    "semantic-release": "^24.2.3",
+    "typescript-eslint": "^8.26.1"
   },
   "type": "module",
   "name": "augmented-steam-plugin",
