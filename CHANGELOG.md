@@ -1,3 +1,17 @@
+## [1.1.5](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.4...v1.1.5) (2025-02-16)
+
+
+### Bug Fixes
+
+* **#11:** Fix styles (tested now) and change banner styles to sit inline with content; prevent committing vscode settings; bun lock changes ([4f4472a](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/4f4472a846ebea542574d360c8c6b3d5b6c72c8a))
+* **#13:** Early Access Game Banner breaks SteamDB achievement group images ([2a9f949](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/2a9f94978a7dffff31b2f9e33e46eb85ca23c89e)), closes [#13](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/issues/13)
+* ci not being able to comment on issues ([e2e8b73](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/e2e8b739ab15e077735c8b922f3fb3926dfac43a))
+
+
+### Reverts
+
+* gitignore and bun lockfile ([d71f8a8](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/commit/d71f8a83dfbf2b3842213c4d022ae00f4402595a))
+
 ## [1.1.4](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.3...v1.1.4) (2025-02-07)
 
 
