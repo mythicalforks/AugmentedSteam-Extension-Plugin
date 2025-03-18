@@ -10,6 +10,15 @@ logger = PluginUtils.Logger("augmented-steam")
 CSS_ID = None
 DEBUG = False
 
+class Logger:
+    @staticmethod
+    def warn(message: str) -> None:
+        logger.warn(message)
+
+    @staticmethod
+    def error(message: str) -> None:
+        logger.error(message)
+
 def GetPluginDir():
     return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 

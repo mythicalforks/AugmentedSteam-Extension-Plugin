@@ -1,4 +1,4 @@
-//* eslint-disable no-duplicate-imports */
+/* eslint-disable no-duplicate-imports */
 import { callable, Millennium } from '@steambrew/webkit';
 import './browser';
 import { retrieveUrlQuery } from './browser';

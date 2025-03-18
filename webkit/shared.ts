@@ -37,9 +37,13 @@ export async function initCdn(): Promise<void> {
   CDN = `https://pseudo.millennium.app${extensionFolder}`;
 }
 
+const backendError = callable<[{ message: string; }], void>('Logger.error');
+const backendWarn = callable<[{ message: string; }], void>('Logger.warn');
+
 export const Logger = {
   error: (...message: unknown[]): void => {
     console.error('%c AugmentedSteam plugin ', 'background: red; color: white', ...message);
+    backendError({ message: message.join(' ') });
   },
   log: (...message: unknown[]): void => {
     console.log('%c AugmentedSteam plugin ', 'background: purple; color: white', ...message);
@@ -49,6 +53,7 @@ export const Logger = {
   },
   warn: (...message: unknown[]): void => {
     console.warn('%c AugmentedSteam plugin ', 'background: orange; color: white', ...message);
+    backendWarn({ message: message.join(' ') });
   },
 };
 
