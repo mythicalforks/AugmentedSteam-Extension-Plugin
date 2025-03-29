@@ -1,3 +1,11 @@
+## [1.1.7](https://github.com/BossSloth/AugmentedSteam-Extension-Plugin/compare/v1.1.6...v1.1.7) (2025-03-29)
+
+
+### Bug Fixes
+
+* don't provide name to logger ([4eb1288](https://github.com/BossSloth/AugmentedSteam-Extension-Plugin/commit/4eb1288345d3a2492963b1554a6a9ab4475b5bc4))
+* send error and warning logs to backend ([59d9294](https://github.com/BossSloth/AugmentedSteam-Extension-Plugin/commit/59d9294381b58e378fad2a2bd255380286a4d303))
+
 ## [1.1.6](https://github.com/BossSloth/AugmentedSteam-Extension-Plugin/compare/v1.1.5...v1.1.6) (2025-03-17)
 
 ## [1.1.5](https://github.com/tddebart/AugmentedSteam-Extension-Plugin/compare/v1.1.4...v1.1.5) (2025-02-16)
