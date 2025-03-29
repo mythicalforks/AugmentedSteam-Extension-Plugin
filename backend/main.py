@@ -5,7 +5,7 @@ import Millennium
 import PluginUtils  # type: ignore
 import requests
 
-logger = PluginUtils.Logger("augmented-steam")
+logger = PluginUtils.Logger()
 
 CSS_ID = None
 DEBUG = False

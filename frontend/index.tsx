@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-// TODO: use steam-types
 import { Millennium } from '@steambrew/client';
 import { initHltbInjection } from './HltbInjection';
 
@@ -12,7 +7,12 @@ let steamID = '-1';
 async function getSteamId(): Promise<string> {
   const loginUsers = await SteamClient.User.GetLoginUsers();
 
-  return loginUsers[0].avatarUrl.match(/avatarcache\/(\d+)/)[1];
+  const match = loginUsers[0]?.avatarUrl.match(/avatarcache\/(\d+)/);
+  if (!match) {
+    throw new Error('Failed to match avatar URL');
+  }
+
+  return match[1] ?? '';
 }
 
 if (Millennium.exposeObj) {
