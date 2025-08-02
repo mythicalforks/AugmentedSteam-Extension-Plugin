@@ -1,3 +1,10 @@
+## [1.1.9](https://github.com/mythicalforks/AugmentedSteam-Extension-Plugin/compare/v1.1.8...v1.1.9) (2025-08-02)
+
+
+### Bug Fixes
+
+* Update submodule to v4.2.3 ([7071945](https://github.com/mythicalforks/AugmentedSteam-Extension-Plugin/commit/707194521c8d147e6d320f13ae2d3fa501db5e11))
+
 ## [1.1.8](https://github.com/BossSloth/AugmentedSteam-Extension-Plugin/compare/v1.1.7...v1.1.8) (2025-04-14)
 
 
